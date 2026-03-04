@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iFlat — Быстрый интернет в Московской области</title>
+  <meta name="description" content="Провайдер интернета и цифрового ТВ в Новой Москве и Московской области. До 500 Мбит/с. FTTH оптоволокно. 300+ каналов.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./base.css">
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- Favicon -->
+  <link rel="icon" href="./assets/logo.png" type="image/png">
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main" class="sr-only" style="position:fixed;top:0;left:0;z-index:999;padding:1rem;background:var(--color-accent);color:var(--color-dark);">Перейти к основному содержанию</a>
+
+  <!-- ========================================
+       HEADER
+       ======================================== -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href="#" class="header-logo" aria-label="iFlat — главная">
+        <svg width="90" height="32" viewBox="0 0 90 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Orange "i" block -->
+          <rect width="24" height="32" rx="3" fill="#f5a623"/>
+          <circle cx="12" cy="8" r="4" fill="white"/>
+          <rect x="8" y="14" width="8" height="14" rx="2" fill="white"/>
+          <!-- "Flat" text in white -->
+          <text x="30" y="26" font-family="'Space Grotesk', sans-serif" font-size="26" font-weight="700" fill="white">Flat</text>
+        </svg>
+      </a>
+
+      <nav class="header-nav" aria-label="Основная навигация">
+        <a href="#tariffs">Интернет в квартиру</a>
+        <a href="#tariffs">Интернет в дом</a>
+        <a href="#services">Телевидение</a>
+        <a href="#equipment">Оборудование</a>
+        <a href="#benefits">Акции</a>
+        <a href="#coverage">Контакты</a>
+      </nav>
+
+      <div class="header-actions">
+        <a href="tel:84957925988" class="header-phone">8 (495) 792-59-88</a>
+        <a href="#tariffs" class="btn btn--accent header-cta">Подключить</a>
+        <button class="hamburger" aria-label="Открыть меню" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu -->
+  <nav class="mobile-menu" aria-label="Мобильная навигация">
+    <a href="#tariffs">Интернет в квартиру</a>
+    <a href="#tariffs">Интернет в дом</a>
+    <a href="#services">Телевидение</a>
+    <a href="#equipment">Оборудование</a>
+    <a href="#benefits">Акции</a>
+    <a href="#coverage">Контакты</a>
+    <a href="tel:84957925988" class="mobile-phone">8 (495) 792-59-88</a>
+    <a href="#tariffs" class="btn btn--accent btn--lg">Подключить</a>
+  </nav>
+
+  <main id="main">
+    <!-- ========================================
+         HERO
+         ======================================== -->
+    <section class="hero" id="hero">
+      <div class="hero-bg">
+        <img src="./assets/banner-internet.webp" alt="" width="1920" height="800" loading="eager" decoding="async">
+      </div>
+      <div class="container hero-content">
+        <div class="hero-badge">
+          <span>🎁</span> 3 месяца бесплатно при подключении
+        </div>
+        <h1>Быстрый интернет там, где&nbsp;вы живёте</h1>
+        <p class="hero-sub">Безлимитный интернет до 500 Мбит/с и цифровое ТВ 300+ каналов в Новой Москве и Московской области</p>
+        <div class="hero-actions">
+          <a href="#tariffs" class="btn btn--accent btn--lg">Выбрать тариф</a>
+          <a href="#coverage" class="btn btn--outline-light btn--lg">Проверить адрес</a>
+        </div>
+        <div class="trust-row">
+          <div class="trust-item">
+            <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span><strong>10 000+</strong> абонентов</span>
+          </div>
+          <div class="trust-item">
+            <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span><strong>Оптоволокно</strong> FTTH</span>
+          </div>
+          <div class="trust-item">
+            <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span><strong>Поддержка</strong> 24/7</span>
+          </div>
+          <div class="trust-item">
+            <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span><strong>С 2009</strong> года</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         TARIFFS
+         ======================================== -->
+    <section class="section-light" id="tariffs">
+      <div class="container">
+        <div class="reveal">
+          <p class="section-title">Тарифы, которые работают на&nbsp;вас</p>
+        </div>
+
+        <div class="tariff-tabs" role="tablist">
+          <button class="tariff-tab active" data-tab="flat" role="tab" aria-selected="true">Квартира</button>
+          <button class="tariff-tab" data-tab="house" role="tab" aria-selected="false">Дом</button>
+        </div>
+
+        <!-- КВАРТИРА -->
+        <div class="tariff-panel active" data-panel="flat">
+          <div class="tariff-grid">
+            <!-- БАЗОВЫЙ -->
+            <div class="tariff-card">
+              <div class="tariff-name">Базовый</div>
+              <div class="tariff-speed">50 <span class="tariff-speed-unit">Мбит/с</span></div>
+              <div class="tariff-price">650 ₽<span class="tariff-price-period">/мес</span></div>
+              <ul class="tariff-features">
+                <li>Безлимитный интернет</li>
+                <li>Скорость до 50 Мбит/с</li>
+                <li>Подключение за 1 день</li>
+              </ul>
+              <a href="#coverage" class="btn btn--dark">Подключить</a>
+            </div>
+
+            <!-- ОПТИМАЛЬНЫЙ -->
+            <div class="tariff-card tariff-card--popular">
+              <span class="tariff-badge">Хит продаж</span>
+              <div class="tariff-name">Оптимальный</div>
+              <div class="tariff-speed">100 <span class="tariff-speed-unit">Мбит/с</span></div>
+              <div class="tariff-price">800 ₽<span class="tariff-price-period">/мес</span></div>
+              <ul class="tariff-features">
+                <li>Безлимитный интернет</li>
+                <li>198 каналов ТВ</li>
+                <li>Скорость до 100 Мбит/с</li>
+                <li>HD и Full HD качество</li>
+              </ul>
+              <a href="#coverage" class="btn btn--accent">Подключить</a>
+            </div>
+
+            <!-- УСПЕШНЫЙ -->
+            <div class="tariff-card">
+              <div class="tariff-name">Успешный</div>
+              <div class="tariff-speed">300 <span class="tariff-speed-unit">Мбит/с</span></div>
+              <div class="tariff-price">1 050 ₽<span class="tariff-price-period">/мес</span></div>
+              <ul class="tariff-features">
+                <li>Безлимитный интернет</li>
+                <li>269 каналов ТВ</li>
+                <li>Скорость до 300 Мбит/с</li>
+                <li>Идеален для семьи</li>
+              </ul>
+              <a href="#coverage" class="btn btn--dark">Подключить</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ДОМ -->
+        <div class="tariff-panel" data-panel="house">
+          <div class="tariff-grid">
+            <!-- iHome 150 -->
+            <div class="tariff-card">
+              <div class="tariff-name">iHome 150</div>
+              <div class="tariff-speed">150 <span class="tariff-speed-unit">Мбит/с</span></div>
+              <div class="tariff-price">1 350 ₽<span class="tariff-price-period">/мес</span></div>
+              <ul class="tariff-features">
+                <li>Безлимитный интернет</li>
+                <li>Скорость до 150 Мбит/с</li>
+                <li>Идеален для дачи</li>
+              </ul>
+              <a href="#coverage" class="btn btn--dark">Подключить</a>
+            </div>
+
+            <!-- iHome 300 -->
+            <div class="tariff-card tariff-card--popular">
+              <span class="tariff-badge">Хит продаж</span>
+              <div class="tariff-name">iHome 300</div>
+              <div class="tariff-speed">300 <span class="tariff-speed-unit">Мбит/с</span></div>
+              <div class="tariff-price">1 800 ₽<span class="tariff-price-period">/мес</span></div>
+              <ul class="tariff-features">
+                <li>Безлимитный интернет</li>
+                <li>201 каналов ТВ</li>
+                <li>Скорость до 300 Мбит/с</li>
+                <li>HD и Full HD качество</li>
+              </ul>
+              <a href="#coverage" class="btn btn--accent">Подключить</a>
+            </div>
+
+            <!-- iHome 500+ -->
+            <div class="tariff-card">
+              <div class="tariff-name">iHome 500+</div>
+              <div class="tariff-speed">500 <span class="tariff-speed-unit">Мбит/с</span></div>
+              <div class="tariff-price">2 400 ₽<span class="tariff-price-period">/мес</span></div>
+              <ul class="tariff-features">
+                <li>Безлимитный интернет</li>
+                <li>271 каналов ТВ</li>
+                <li>Скорость до 500 Мбит/с</li>
+                <li>Максимальная производительность</li>
+              </ul>
+              <a href="#coverage" class="btn btn--dark">Подключить</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="tariff-note reveal">
+          💡 Экономьте до 20% при оплате за 6 или 12 месяцев
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         SERVICES
+         ======================================== -->
+    <section class="section-surface" id="services">
+      <div class="container">
+        <p class="section-title reveal">Всё для комфортной цифровой жизни</p>
+        <div style="height: var(--space-8);"></div>
+
+        <div class="services-grid">
+          <!-- TV -->
+          <div class="service-item reveal">
+            <div class="service-image">
+              <img src="./assets/service-tv.png" alt="Цифровое ТВ от iFlat" width="400" height="300" loading="lazy" decoding="async">
+            </div>
+            <div class="service-text">
+              <h3>Цифровое ТВ</h3>
+              <p>300+ каналов в HD и Full HD качестве. Фильмы, спорт, детские каналы — всё включено в ваш тариф.</p>
+            </div>
+          </div>
+
+          <!-- CCTV -->
+          <div class="service-item reveal">
+            <div class="service-image">
+              <img src="./assets/service-cctv.png" alt="Облачное видеонаблюдение" width="400" height="300" loading="lazy" decoding="async">
+            </div>
+            <div class="service-text">
+              <h3>Облачное видеонаблюдение</h3>
+              <p>Следите за домом, дачей или офисом с любого устройства. Запись в облако 24/7, умные уведомления о движении.</p>
+            </div>
+          </div>
+
+          <!-- Intercom -->
+          <div class="service-item reveal">
+            <div class="service-image">
+              <img src="./assets/service-domofon.png" alt="Умный домофон" width="400" height="300" loading="lazy" decoding="async">
+            </div>
+            <div class="service-text">
+              <h3>Умный домофон</h3>
+              <p>Откройте дверь с телефона из любой точки мира. IP-домофон нового поколения с видеосвязью.</p>
+            </div>
+          </div>
+
+          <!-- Telephony -->
+          <div class="service-item reveal">
+            <div class="service-image">
+              <img src="./assets/service-phone.png" alt="Городская телефония" width="400" height="300" loading="lazy" decoding="async">
+            </div>
+            <div class="service-text">
+              <h3>Городская телефония</h3>
+              <p>Надёжная связь с московскими номерами 495, 499, 496. Виртуальная АТС для бизнеса.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         EQUIPMENT
+         ======================================== -->
+    <section class="section-light" id="equipment">
+      <div class="container">
+        <p class="section-title reveal">Проверенное оборудование</p>
+        <p class="section-subtitle reveal">Подберём роутер под ваши задачи — от студии до загородного дома</p>
+        <div style="height: var(--space-8);"></div>
+
+        <div class="equipment-grid reveal" data-stagger>
+          <div class="equipment-card">
+            <div class="equipment-image">
+              <img src="./assets/eq-mercusys.png" alt="Mercusys AC1200" width="260" height="160" loading="lazy" decoding="async">
+            </div>
+            <h3>Mercusys AC1200</h3>
+            <div class="price">3 530 ₽</div>
+            <p>Двухдиапазонный Wi-Fi, идеален для квартиры до 60 м²</p>
+          </div>
+
+          <div class="equipment-card">
+            <div class="equipment-image">
+              <img src="./assets/eq-keenetic-speedster.png" alt="Keenetic Speedster" width="260" height="160" loading="lazy" decoding="async">
+            </div>
+            <h3>Keenetic Speedster</h3>
+            <div class="price">7 930 ₽</div>
+            <p>Гигабитный Mesh Wi-Fi AC1200 для средних квартир</p>
+          </div>
+
+          <div class="equipment-card">
+            <div class="equipment-image">
+              <img src="./assets/eq-keenetic-giga.png" alt="Keenetic Giga" width="260" height="160" loading="lazy" decoding="async">
+            </div>
+            <h3>Keenetic Giga</h3>
+            <div class="price">13 000 ₽</div>
+            <p>Wi-Fi 6 AX3000 для больших домов и требовательных пользователей</p>
+          </div>
+
+          <div class="equipment-card">
+            <div class="equipment-image">
+              <img src="./assets/eq-smotreshka.png" alt="Смотрёшка BOX" width="260" height="160" loading="lazy" decoding="async">
+            </div>
+            <h3>Смотрёшка BOX</h3>
+            <div class="price">3 990 ₽</div>
+            <p>ТВ-приставка с синхронизацией iOS/Android</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         BENEFITS (Dark)
+         ======================================== -->
+    <section class="section-dark" id="benefits">
+      <div class="container">
+        <p class="section-title section-title--light reveal">Удобно платить — приятно пользоваться</p>
+        <div style="height: var(--space-8);"></div>
+
+        <div class="benefits-grid reveal" data-stagger>
+          <div class="benefit-card">
+            <img src="./assets/service-autopay.png" alt="" class="benefit-icon" width="56" height="56" loading="lazy" decoding="async">
+            <h3>Автоплатёж</h3>
+            <p>Забудьте о пропущенных платежах. Счёт пополняется автоматически.</p>
+          </div>
+
+          <div class="benefit-card">
+            <img src="./assets/service-subscription.png" alt="" class="benefit-icon" width="56" height="56" loading="lazy" decoding="async">
+            <h3>Абонемент</h3>
+            <p>Оплатите на 6 месяцев — скидка 15%. На 12 месяцев — скидка 20%.</p>
+          </div>
+
+          <div class="benefit-card">
+            <img src="./assets/service-trust-pay.png" alt="" class="benefit-icon" width="56" height="56" loading="lazy" decoding="async">
+            <h3>Доверительный платёж</h3>
+            <p>Нет возможности оплатить прямо сейчас? Подключите услугу и продолжайте пользоваться.</p>
+          </div>
+
+          <div class="benefit-card">
+            <img src="./assets/service-promo.png" alt="" class="benefit-icon" width="56" height="56" loading="lazy" decoding="async">
+            <h3>Акции</h3>
+            <p>Регулярные спецпредложения для новых и действующих абонентов.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         MOBILE APP
+         ======================================== -->
+    <section class="section-light" id="app">
+      <div class="container">
+        <div class="app-section">
+          <div class="app-image reveal">
+            <img src="./assets/mobile-app.png" alt="Мобильное приложение iFlat" width="400" height="400" loading="lazy" decoding="async">
+          </div>
+          <div class="app-text reveal">
+            <h2>Управляйте услугами в одно касание</h2>
+            <p>Личный кабинет iFlat — баланс, оплата, подключение услуг и техподдержка прямо в смартфоне.</p>
+            <div class="app-badges">
+              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Скачать в Google Play">
+                <img src="./assets/google-play.png" alt="Google Play" width="135" height="44" loading="lazy">
+              </a>
+              <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Скачать в App Store">
+                <img src="./assets/app-store.png" alt="App Store" width="135" height="44" loading="lazy">
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         COVERAGE
+         ======================================== -->
+    <section class="section-surface" id="coverage">
+      <div class="container">
+        <p class="section-title reveal">Зона покрытия</p>
+        <p class="section-subtitle reveal">Подключаем интернет и цифровое ТВ в Новой Москве, Наро-Фоминском, Одинцовском, Можайском районах Московской области и Боровском районе Калужской области</p>
+
+        <div class="coverage-tags reveal">
+          <span class="coverage-tag">г. Наро-Фоминск</span>
+          <span class="coverage-tag">рп. Селятино</span>
+          <span class="coverage-tag">рп. Калининец</span>
+          <span class="coverage-tag">п. Петровское</span>
+          <span class="coverage-tag">д. Яковлевское</span>
+          <span class="coverage-tag">рп. Киевский</span>
+          <span class="coverage-tag">Верея</span>
+          <span class="coverage-tag">ЖК Борисоглебское</span>
+          <span class="coverage-tag" style="background: var(--color-accent-light); border-color: oklch(from #f5a623 l c h / 0.2); color: var(--color-accent-active);">+ другие</span>
+        </div>
+
+        <a href="#" class="btn btn--accent btn--lg reveal">Проверить подключение по адресу</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================
+       FOOTER
+       ======================================== -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <svg width="90" height="28" viewBox="0 0 90 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="24" height="32" rx="3" fill="#f5a623"/>
+            <circle cx="12" cy="8" r="4" fill="white"/>
+            <rect x="8" y="14" width="8" height="14" rx="2" fill="white"/>
+            <text x="30" y="26" font-family="'Space Grotesk', sans-serif" font-size="26" font-weight="700" fill="white">Flat</text>
+          </svg>
+          <p>Провайдер интернета и цифрового ТВ в Московской области. Оптоволокно до квартиры. Работаем с 2009 года.</p>
+          <div class="footer-phones">
+            <a href="tel:84957925988">8 (495) 792-59-88</a>
+            <a href="tel:88001005988">8 (800) 100-59-88</a>
+            <span class="phone-note">бесплатно по России</span>
+          </div>
+          <p style="margin-top: var(--space-3); font-size: var(--text-sm);">
+            <a href="mailto:info@iflat.ru" style="color: var(--color-text-on-dark-muted); text-decoration: none;">info@iflat.ru</a>
+          </p>
+
+          <div class="footer-social">
+            <!-- VK -->
+            <a href="#" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.587-1.496c.598-.189 1.37 1.254 2.187 1.808.617.42 1.087.328 1.087.328l2.185-.03s1.142-.07.6-.97c-.044-.073-.315-.66-1.62-1.864-1.366-1.261-1.183-1.057.463-3.239.998-1.325 1.398-2.133 1.273-2.48-.119-.33-.852-.243-.852-.243l-2.457.015s-.183-.025-.318.056c-.132.079-.216.262-.216.262s-.388 1.034-.906 1.913c-1.092 1.855-1.529 1.953-1.708 1.838-.416-.267-.312-1.074-.312-1.646 0-1.789.271-2.534-.528-2.728-.265-.064-.46-.106-1.139-.113-.87-.009-1.607.003-2.024.207-.278.136-.492.438-.361.455.161.02.527.099.72.362.25.34.24 1.104.24 1.104s.145 2.106-.332 2.367c-.328.18-.776-.186-1.739-1.858-.493-.856-.866-1.803-.866-1.803s-.072-.176-.2-.271c-.155-.115-.372-.151-.372-.151l-2.335.015s-.35.01-.478.162c-.114.135-.009.413-.009.413s1.83 4.282 3.9 6.441c1.9 1.978 4.059 1.848 4.059 1.848h.978z"/></svg>
+            </a>
+            <!-- Telegram -->
+            <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 1 0 24 12.056A12.014 12.014 0 0 0 11.944 0Zm5.654 8.26-1.97 9.287c-.146.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.566-4.458c.538-.196 1.006.128.832.932Z"/></svg>
+            </a>
+            <!-- OK -->
+            <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Одноклассники">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.6c-1.325 0-2.4 1.075-2.4 2.4s1.075 2.4 2.4 2.4 2.4-1.075 2.4-2.4-1.075-2.4-2.4-2.4zm0 7.8c-2.981 0-5.4-2.419-5.4-5.4S9.019 3.6 12 3.6s5.4 2.419 5.4 5.4-2.419 5.4-5.4 5.4zm3.6 1.32c1.124-.443 2.1-1.128 2.85-1.98.6-.684.534-1.728-.15-2.328-.684-.6-1.728-.534-2.328.15-.894 1.02-2.37 1.638-3.972 1.638s-3.078-.618-3.972-1.638c-.6-.684-1.644-.75-2.328-.15-.684.6-.75 1.644-.15 2.328.75.852 1.726 1.537 2.85 1.98l-2.754 2.754c-.66.66-.66 1.728 0 2.388.33.33.762.492 1.194.492s.864-.162 1.194-.492L12 17.508l2.754 2.754c.33.33.762.492 1.194.492s.864-.162 1.194-.492c.66-.66.66-1.728 0-2.388L14.4 15.12z"/><circle cx="12" cy="9" r="2.4"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Продукты</h4>
+          <ul role="list">
+            <li><a href="#tariffs">Интернет в квартиру</a></li>
+            <li><a href="#tariffs">Интернет в дом</a></li>
+            <li><a href="#services">Телевидение</a></li>
+            <li><a href="#equipment">Оборудование</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Услуги</h4>
+          <ul role="list">
+            <li><a href="#services">Видеонаблюдение</a></li>
+            <li><a href="#services">Умный домофон</a></li>
+            <li><a href="#services">Телефония</a></li>
+            <li><a href="#benefits">Автоплатёж</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Компания</h4>
+          <ul role="list">
+            <li><a href="#coverage">Зона покрытия</a></li>
+            <li><a href="#benefits">Акции</a></li>
+            <li><a href="#app">Мобильное приложение</a></li>
+            <li><a href="#coverage">Контакты</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2009–2026 ООО «Юнионтел». Все права защищены.</p>
+        <div class="footer-legal">
+          <a href="#" target="_blank" rel="noopener noreferrer">Политика обработки персональных данных</a>
+          <a href="#" target="_blank" rel="noopener noreferrer">Публичная оферта</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
