@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md — CSS-архитектура для 140%-расширения: overflow, stacking, width expansion, transitions
+- [x] 01-01-PLAN.md — CSS-архитектура для 140%-расширения: overflow, stacking, width expansion, transitions
 
 ### Phase 2: API Layer
 **Goal**: Сервер получает гостевой токен 24h.tv, кеширует его, и проксирует stream-запросы — токен никогда не попадает в браузер
@@ -43,7 +43,10 @@ Plans:
   1. Route Handler `/api/tv/stream/[id]` возвращает HLS-manifest URL для любого канала с валидным id
   2. Повторные запросы к API используют кешированный токен — POST /v2/users не вызывается при каждом hover
   3. Конкурентные hover-события не создают дублирующихся токен-запросов (singleton deduplication)
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 02-01-PLAN.md — TokenManager singleton + Route Handler /api/tv/stream/[id]
 
 ### Phase 3: ChannelCard HLS Integration
 **Goal**: Пользователь видит живой эфир при наведении на карточку канала, видео плавно исчезает при уходе курсора
@@ -87,7 +90,7 @@ Note: Phase 1 and Phase 2 have no dependency between them and can be built concu
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. CSS Expand Architecture | 1/1 | Complete   | 2026-03-09 |
-| 2. API Layer | 0/? | Not started | - |
+| 2. API Layer | 0/1 | In Progress | - |
 | 3. ChannelCard HLS Integration | 0/? | Not started | - |
 | 4. Data Wiring + Home Page | 0/? | Not started | - |
 | 5. Visual Polish | 0/? | Not started | - |
