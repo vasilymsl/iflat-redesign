@@ -46,7 +46,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01-PLAN.md — TokenManager singleton + Route Handler /api/tv/stream/[id]
+- [x] 02-01-PLAN.md — TokenManager singleton + Route Handler /api/tv/stream/[id]
 
 ### Phase 3: ChannelCard HLS Integration
 **Goal**: Пользователь видит живой эфир при наведении на карточку канала, видео плавно исчезает при уходе курсора
@@ -58,7 +58,10 @@ Plans:
   3. LIVE-бейдж отображается поверх видео во время воспроизведения стрима
   4. При наведении на другую карточку предыдущий стрим мгновенно останавливается
   5. При уходе курсора стрим останавливается и ресурсы освобождаются (нет memory leak)
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 03-01-PLAN.md — HLS-интеграция: dynamic fetch, crossfade, LIVE badge, single-active-player координация
 
 ### Phase 4: Data Wiring + Home Page
 **Goal**: Шлейфы показывают актуальные данные из API 24h.tv и доступны на главной странице
@@ -94,6 +97,6 @@ Note: Phase 1 and Phase 2 have no dependency between them and can be built concu
 |-------|----------------|--------|-----------|
 | 1. CSS Expand Architecture | 1/1 | Complete   | 2026-03-09 |
 | 2. API Layer | 1/1 | Complete   | 2026-03-09 |
-| 3. ChannelCard HLS Integration | 0/? | Not started | - |
+| 3. ChannelCard HLS Integration | 0/1 | Planning | - |
 | 4. Data Wiring + Home Page | 0/1 | Planning | - |
 | 5. Visual Polish | 0/? | Not started | - |
