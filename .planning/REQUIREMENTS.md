@@ -9,12 +9,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Hover-анимация
 
-- [ ] **HOVER-01**: При наведении на карточку канала, она расширяется до ~140% ширины и перекрывает соседние карточки
-- [ ] **HOVER-02**: Расширение начинается с задержкой 200ms для предотвращения случайных срабатываний
-- [ ] **HOVER-03**: Анимация расширения плавная (CSS GPU-composited, 0.25s ease-out)
-- [ ] **HOVER-04**: Scroll-контейнер не обрезает расширенную карточку (решена проблема overflow)
+- [x] **HOVER-01**: При наведении на карточку канала, она расширяется до ~140% ширины и перекрывает соседние карточки
+- [x] **HOVER-02**: Расширение начинается с задержкой 200ms для предотвращения случайных срабатываний
+- [x] **HOVER-03**: Анимация расширения плавная (CSS GPU-composited, 0.25s ease-out)
+- [x] **HOVER-04**: Scroll-контейнер не обрезает расширенную карточку (решена проблема overflow)
 - [ ] **HOVER-05**: При появлении HLS-видео происходит плавный кроссфейд от thumbnail к видео (0.4s)
-- [ ] **HOVER-06**: При уходе курсора карточка плавно возвращается к исходному размеру
+- [x] **HOVER-06**: При уходе курсора карточка плавно возвращается к исходному размеру
 
 ### HLS-стриминг
 
@@ -66,12 +66,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HOVER-01 | Phase 1 | Pending |
-| HOVER-02 | Phase 1 | Pending |
-| HOVER-03 | Phase 1 | Pending |
-| HOVER-04 | Phase 1 | Pending |
+| HOVER-01 | Phase 1 | Complete |
+| HOVER-02 | Phase 1 | Complete |
+| HOVER-03 | Phase 1 | Complete |
+| HOVER-04 | Phase 1 | Complete |
 | HOVER-05 | Phase 3 | Pending |
-| HOVER-06 | Phase 1 | Pending |
+| HOVER-06 | Phase 1 | Complete |
 | HLS-01 | Phase 2 | Pending |
 | HLS-02 | Phase 2 | Pending |
 | HLS-03 | Phase 3 | Pending |

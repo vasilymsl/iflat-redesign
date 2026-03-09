@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: planning
+stopped_at: "Completed Task 1 of 01-01-PLAN.md — awaiting checkpoint:human-verify (Task 2)"
+last_updated: "2026-03-09T18:31:24.068Z"
+last_activity: 2026-03-09 — Roadmap created, ready to begin Phase 1
+progress:
+  total_phases: 5
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
+  percent: 100
+---
+
 # Project State
 
 ## Project Reference
@@ -14,7 +30,7 @@ Plan: 0 of ? in current phase
 Status: Ready to plan
 Last activity: 2026-03-09 — Roadmap created, ready to begin Phase 1
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -34,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01-css-expand-architecture P01 | 10min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -45,6 +62,8 @@ Recent decisions affecting current work:
 - Phase 1: CSS expand через `position: absolute` overlay (не layout-изменение width/scale) — избегает scroll-snap конфликта и overflow-clipping одновременно
 - Phase 1: `overflow-x: auto; overflow-y: visible` на scroll-контейнере — критично для видимости расширенных карточек
 - Phase 2: Singleton promise deduplication для guest token — предотвращает race conditions при concurrent hover
+- [Phase 01-css-expand-architecture]: Use width: 140% on .channel-card-inner (not scaleX) to preserve text/logo proportions during hover expansion
+- [Phase 01-css-expand-architecture]: isolation: isolate on .tv-shelf__slider — z-index children contained within slider, not competing with header z-50
 
 ### Pending Todos
 
@@ -58,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09
-Stopped at: Roadmap created — все 17 v1 требований распределены по 5 фазам
+Last session: 2026-03-09T18:31:24.066Z
+Stopped at: Completed Task 1 of 01-01-PLAN.md — awaiting checkpoint:human-verify (Task 2)
 Resume file: None
