@@ -30,7 +30,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Расширение начинается с задержкой 200ms и анимируется плавно (0.25s ease-out)
   4. При уходе курсора карточка плавно возвращается к исходному размеру
   5. Z-index расширенной карточки не конфликтует с шапкой сайта
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 01-01-PLAN.md — CSS-архитектура для 140%-расширения: overflow, stacking, width expansion, transitions
 
 ### Phase 2: API Layer
 **Goal**: Сервер получает гостевой токен 24h.tv, кеширует его, и проксирует stream-запросы — токен никогда не попадает в браузер
@@ -83,7 +86,7 @@ Note: Phase 1 and Phase 2 have no dependency between them and can be built concu
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. CSS Expand Architecture | 0/? | Not started | - |
+| 1. CSS Expand Architecture | 0/1 | Planning complete | - |
 | 2. API Layer | 0/? | Not started | - |
 | 3. ChannelCard HLS Integration | 0/? | Not started | - |
 | 4. Data Wiring + Home Page | 0/? | Not started | - |
