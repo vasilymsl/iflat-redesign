@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-09T18:52:13.564Z"
+stopped_at: Completed 02-api-layer-01-PLAN.md
+last_updated: "2026-03-09T19:17:43.058Z"
 last_activity: 2026-03-09 — Roadmap created, ready to begin Phase 1
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
   percent: 100
 ---
 
@@ -51,6 +51,7 @@ Progress: [██████████] 100%
 
 *Updated after each plan completion*
 | Phase 01-css-expand-architecture P01 | 10min | 1 tasks | 1 files |
+| Phase 02-api-layer P01 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,9 @@ Recent decisions affecting current work:
 - Phase 2: Singleton promise deduplication для guest token — предотвращает race conditions при concurrent hover
 - [Phase 01-css-expand-architecture]: Use width: 140% on .channel-card-inner (not scaleX) to preserve text/logo proportions during hover expansion
 - [Phase 01-css-expand-architecture]: isolation: isolate on .tv-shelf__slider — z-index children contained within slider, not competing with header z-50
+- [Phase 02-api-layer]: TOKEN_TTL_MS = 90 minutes with 401 auto-retry as reactive fallback for unknown real TTL
+- [Phase 02-api-layer]: CHANNEL_ID_MAP uses '??' placeholders — requires manual discovery from GET /v2/channels
+- [Phase 02-api-layer]: Silent fail on non-401 errors: null return lets Phase 3 player skip gracefully
 
 ### Pending Todos
 
@@ -77,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-09T18:52:13.562Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-api-layer/02-CONTEXT.md
+Last session: 2026-03-09T19:17:43.056Z
+Stopped at: Completed 02-api-layer-01-PLAN.md
+Resume file: None

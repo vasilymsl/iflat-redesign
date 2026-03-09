@@ -18,8 +18,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### HLS-стриминг
 
-- [ ] **HLS-01**: Next.js Route Handler получает гостевой токен 24h.tv (POST /v2/users с is_guest:true)
-- [ ] **HLS-02**: Токен кешируется на сервере с автообновлением по TTL
+- [x] **HLS-01**: Next.js Route Handler получает гостевой токен 24h.tv (POST /v2/users с is_guest:true)
+- [x] **HLS-02**: Токен кешируется на сервере с автообновлением по TTL
 - [ ] **HLS-03**: При наведении на карточку канала запрашивается и проигрывается реальный HLS-стрим
 - [ ] **HLS-04**: Стрим корректно останавливается и ресурсы освобождаются при уходе курсора
 - [ ] **HLS-05**: Только один стрим играет одновременно (предыдущий останавливается при наведении на новую карточку)
@@ -72,8 +72,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HOVER-04 | Phase 1 | Complete |
 | HOVER-05 | Phase 3 | Pending |
 | HOVER-06 | Phase 1 | Complete |
-| HLS-01 | Phase 2 | Pending |
-| HLS-02 | Phase 2 | Pending |
+| HLS-01 | Phase 2 | Complete |
+| HLS-02 | Phase 2 | Complete |
 | HLS-03 | Phase 3 | Pending |
 | HLS-04 | Phase 3 | Pending |
 | HLS-05 | Phase 3 | Pending |

@@ -13,7 +13,7 @@
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: CSS Expand Architecture** - Правильная overflow/stacking архитектура для 140%-расширения карточек (completed 2026-03-09)
-- [ ] **Phase 2: API Layer** - Гостевой токен, список каналов и стрим-проксирование через Route Handler
+- [x] **Phase 2: API Layer** - Гостевой токен, список каналов и стрим-проксирование через Route Handler (completed 2026-03-09)
 - [ ] **Phase 3: ChannelCard HLS Integration** - Hover-triggered HLS preview с кроссфейдом, LIVE-бейджем и корректной очисткой
 - [ ] **Phase 4: Data Wiring + Home Page** - Живые данные API вместо статики, шлейфы на главной странице
 - [ ] **Phase 5: Visual Polish** - Финальная визуальная полировка и адаптивность
@@ -90,7 +90,7 @@ Note: Phase 1 and Phase 2 have no dependency between them and can be built concu
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. CSS Expand Architecture | 1/1 | Complete   | 2026-03-09 |
-| 2. API Layer | 0/1 | In Progress | - |
+| 2. API Layer | 1/1 | Complete   | 2026-03-09 |
 | 3. ChannelCard HLS Integration | 0/? | Not started | - |
 | 4. Data Wiring + Home Page | 0/? | Not started | - |
 | 5. Visual Polish | 0/? | Not started | - |
