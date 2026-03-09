@@ -66,29 +66,29 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HOVER-01 | — | Pending |
-| HOVER-02 | — | Pending |
-| HOVER-03 | — | Pending |
-| HOVER-04 | — | Pending |
-| HOVER-05 | — | Pending |
-| HOVER-06 | — | Pending |
-| HLS-01 | — | Pending |
-| HLS-02 | — | Pending |
-| HLS-03 | — | Pending |
-| HLS-04 | — | Pending |
-| HLS-05 | — | Pending |
-| HLS-06 | — | Pending |
-| VIS-01 | — | Pending |
-| VIS-02 | — | Pending |
-| VIS-03 | — | Pending |
-| VIS-04 | — | Pending |
-| VIS-05 | — | Pending |
+| HOVER-01 | Phase 1 | Pending |
+| HOVER-02 | Phase 1 | Pending |
+| HOVER-03 | Phase 1 | Pending |
+| HOVER-04 | Phase 1 | Pending |
+| HOVER-05 | Phase 3 | Pending |
+| HOVER-06 | Phase 1 | Pending |
+| HLS-01 | Phase 2 | Pending |
+| HLS-02 | Phase 2 | Pending |
+| HLS-03 | Phase 3 | Pending |
+| HLS-04 | Phase 3 | Pending |
+| HLS-05 | Phase 3 | Pending |
+| HLS-06 | Phase 3 | Pending |
+| VIS-01 | Phase 4 | Pending |
+| VIS-02 | Phase 5 | Pending |
+| VIS-03 | Phase 5 | Pending |
+| VIS-04 | Phase 5 | Pending |
+| VIS-05 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17 ⚠️
+- Mapped to phases: 17
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-09*
-*Last updated: 2026-03-09 after initial definition*
+*Last updated: 2026-03-09 after roadmap creation*
