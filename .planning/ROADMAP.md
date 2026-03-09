@@ -68,7 +68,10 @@ Plans:
   1. Оба шлейфа ("Бесплатные каналы" и "Новинки") видны на главной странице `/`
   2. Данные каналов и список "Новинки" загружаются из API 24h.tv (не из статического tv-shelves.ts)
   3. При недоступности API шлейфы используют статические данные как fallback — страница не ломается
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 04-01-PLAN.md — Data layer tv-data.ts + TV-секция на главной + обновление tv/page.tsx
 
 ### Phase 5: Visual Polish
 **Goal**: Шлейфы визуально соответствуют стилю 24h.tv и корректно адаптируются к ширине экрана
@@ -92,5 +95,5 @@ Note: Phase 1 and Phase 2 have no dependency between them and can be built concu
 | 1. CSS Expand Architecture | 1/1 | Complete   | 2026-03-09 |
 | 2. API Layer | 1/1 | Complete   | 2026-03-09 |
 | 3. ChannelCard HLS Integration | 0/? | Not started | - |
-| 4. Data Wiring + Home Page | 0/? | Not started | - |
+| 4. Data Wiring + Home Page | 0/1 | Planning | - |
 | 5. Visual Polish | 0/? | Not started | - |
