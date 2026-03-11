@@ -4,7 +4,7 @@ milestone: v1.1
 milestone_name: QRATOR Stability Fix
 status: planning
 stopped_at: Completed 06-core-rate-limit-fix-01-PLAN.md
-last_updated: "2026-03-11T23:01:08.640Z"
+last_updated: "2026-03-11T23:03:48.091Z"
 last_activity: 2026-03-12 — Roadmap v1.1 создан, все 10 требований распределены по фазам 6–8
 progress:
   total_phases: 8
