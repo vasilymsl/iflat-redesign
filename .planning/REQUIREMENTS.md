@@ -13,9 +13,9 @@
 
 ### Resilience
 
-- [ ] **RESIL-01**: Circuit breaker останавливает batch расписаний при 3+ последовательных ошибках
-- [ ] **RESIL-02**: Stream-запросы (`/api/tv/stream/[id]`) фейлятся быстро (max 1 retry) — не 14 секунд на hover
-- [ ] **RESIL-03**: При недоступности API каналов используется статический fallback из `tv-shelves.ts`
+- [x] **RESIL-01**: Circuit breaker останавливает batch расписаний при 3+ последовательных ошибках
+- [x] **RESIL-02**: Stream-запросы (`/api/tv/stream/[id]`) фейлятся быстро (max 1 retry) — не 14 секунд на hover
+- [x] **RESIL-03**: При недоступности API каналов используется статический fallback из `tv-shelves.ts`
 
 ### Token
 
@@ -51,9 +51,9 @@
 | RATE-02 | Phase 6 | Complete |
 | RATE-03 | Phase 6 | Complete |
 | PERF-01 | Phase 6 | Complete |
-| RESIL-01 | Phase 7 | Pending |
-| RESIL-02 | Phase 7 | Pending |
-| RESIL-03 | Phase 7 | Pending |
+| RESIL-01 | Phase 7 | Complete |
+| RESIL-02 | Phase 7 | Complete |
+| RESIL-03 | Phase 7 | Complete |
 | TOKEN-01 | Phase 8 | Pending |
 | TOKEN-02 | Phase 8 | Pending |
 | PERF-02 | Phase 8 | Pending |

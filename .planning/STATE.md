@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: QRATOR Stability Fix
 status: planning
-stopped_at: Completed 06-core-rate-limit-fix-01-PLAN.md
-last_updated: "2026-03-11T23:03:48.091Z"
+stopped_at: Completed 07-circuit-breaker-resilience-01-PLAN.md
+last_updated: "2026-03-11T23:20:34.385Z"
 last_activity: 2026-03-12 — Roadmap v1.1 создан, все 10 требований распределены по фазам 6–8
 progress:
   total_phases: 8
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 3
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 4
 ---
 
 # Project State
@@ -47,6 +47,7 @@ Progress (v1.1): [░░░░░░░░░░] 0% (0/3 фаз v1.1 завер
 
 *Updated after each plan completion*
 | Phase 06-core-rate-limit-fix P01 | 2 | 2 tasks | 1 files |
+| Phase 07-circuit-breaker-resilience P01 | 12 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -59,6 +60,9 @@ Progress (v1.1): [░░░░░░░░░░] 0% (0/3 фаз v1.1 завер
 - [v1.1]: Все изменения только в src/lib/tv-token.ts — нулевые новые зависимости
 - [Phase 06-core-rate-limit-fix]: Promise-chain mutex (requestQueue) вместо elapsed-time check (lastRequestAt) — единственный надёжный способ сериализации запросов
 - [Phase 06-core-rate-limit-fix]: execSync('sleep') удалён из curlJsonSync — event loop не блокируется, replaced с await sleep() в curlJson
+- [Phase 07-circuit-breaker-resilience]: Circuit breaker state in globalThis.__tvScheduleCB — survives Next.js hot-reload like other TV caches
+- [Phase 07-circuit-breaker-resilience]: curlJsonStream is synchronous (execSync) — fast-fail for interactive hover, spawn() migration is Future Requirement
+- [Phase 07-circuit-breaker-resilience]: Static freeChannels fallback in getChannels — graceful degradation when API returns empty array
 
 ### Pending Todos
 
@@ -71,6 +75,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-11T23:01:08.638Z
-Stopped at: Completed 06-core-rate-limit-fix-01-PLAN.md
+Last session: 2026-03-11T23:20:34.383Z
+Stopped at: Completed 07-circuit-breaker-resilience-01-PLAN.md
 Resume file: None
