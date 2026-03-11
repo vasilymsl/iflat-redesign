@@ -97,7 +97,7 @@ Plans:
 
 ---
 
-### 🚧 v1.1 QRATOR Stability Fix (In Progress)
+### v1.1 QRATOR Stability Fix (In Progress)
 
 **Milestone Goal:** HLS-стримы и расписания каналов стабильно работают, не падая из-за QRATOR rate-limiting
 
@@ -113,13 +113,13 @@ Plans:
 **Requirements**: RATE-01, RATE-02, RATE-03, PERF-01
 **Success Criteria** (what must be TRUE):
   1. При одновременном наведении на несколько карточек запросы к API идут последовательно, не параллельно — QRATOR не получает burst
-  2. В логах сервера пауза между curl-запросами ≥350ms (или ≥500ms для schedule) — видна в консоли dev-сервера
+  2. В логах сервера пауза между curl-запросами >=350ms (или >=500ms для schedule) — видна в консоли dev-сервера
   3. Авторизация (4 шага) проходит без 429 ошибок — токен получается с первой попытки при запуске сервера
   4. Node.js event loop не зависает при hover-запросах — страница остаётся отзывчивой
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 06-01: Promise mutex + async sleep в curlJson, убрать execSync sleep из curlJsonSync, именованные константы delay
+- [ ] 06-01-PLAN.md — Promise-chain mutex в curlJson + убрать execSync sleep из curlJsonSync
 
 ### Phase 7: Circuit Breaker + Resilience
 **Goal**: Пакетные запросы расписаний защищены от retry storm, при недоступности API сайт работает со статическими данными
@@ -127,7 +127,7 @@ Plans:
 **Requirements**: RESIL-01, RESIL-02, RESIL-03
 **Success Criteria** (what must be TRUE):
   1. После 3 последовательных ошибок расписаний circuit breaker срабатывает — в логах видно сообщение об остановке batch
-  2. При наведении на карточку канала и недоступности stream API ответ приходит не позднее чем через 3–4 секунды (не 14)
+  2. При наведении на карточку канала и недоступности stream API ответ приходит не позднее чем через 3-4 секунды (не 14)
   3. Если API каналов вернул пустой массив, шлейфы показывают статические каналы из tv-shelves.ts — страница не пустая
 **Plans**: TBD
 
@@ -150,8 +150,8 @@ Plans:
 ## Progress
 
 **Execution Order:**
-v1.0: 1 → 2 → 3 → 4 → 5 (complete)
-v1.1: 6 → 7 → 8
+v1.0: 1 -> 2 -> 3 -> 4 -> 5 (complete)
+v1.1: 6 -> 7 -> 8
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
