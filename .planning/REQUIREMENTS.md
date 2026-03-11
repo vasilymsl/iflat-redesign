@@ -47,21 +47,21 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RATE-01 | — | Pending |
-| RATE-02 | — | Pending |
-| RATE-03 | — | Pending |
-| RESIL-01 | — | Pending |
-| RESIL-02 | — | Pending |
-| RESIL-03 | — | Pending |
-| TOKEN-01 | — | Pending |
-| TOKEN-02 | — | Pending |
-| PERF-01 | — | Pending |
-| PERF-02 | — | Pending |
+| RATE-01 | Phase 6 | Pending |
+| RATE-02 | Phase 6 | Pending |
+| RATE-03 | Phase 6 | Pending |
+| PERF-01 | Phase 6 | Pending |
+| RESIL-01 | Phase 7 | Pending |
+| RESIL-02 | Phase 7 | Pending |
+| RESIL-03 | Phase 7 | Pending |
+| TOKEN-01 | Phase 8 | Pending |
+| TOKEN-02 | Phase 8 | Pending |
+| PERF-02 | Phase 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10 ⚠️
+- Mapped to phases: 10
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-12*
