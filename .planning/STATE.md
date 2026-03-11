@@ -4,7 +4,7 @@ milestone: v1.1
 milestone_name: QRATOR Stability Fix
 status: planning
 stopped_at: Completed 07-circuit-breaker-resilience-01-PLAN.md
-last_updated: "2026-03-11T23:20:34.385Z"
+last_updated: "2026-03-11T23:23:38.373Z"
 last_activity: 2026-03-12 — Roadmap v1.1 создан, все 10 требований распределены по фазам 6–8
 progress:
   total_phases: 8
