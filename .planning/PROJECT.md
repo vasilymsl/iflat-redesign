@@ -12,26 +12,30 @@
 
 ### Validated
 
-<!-- Базовые компоненты уже созданы предыдущим агентом -->
-
-- ✓ Компонент ChannelCard с HLS-плеером (hls.js dynamic import, AbortController) — v0
-- ✓ Компонент TvChannelShelf — горизонтальный scroll со стрелками — v0
-- ✓ Компонент ContentShelf — горизонтальный scroll для постеров — v0
-- ✓ Статические данные каналов и фильмов (tv-shelves.ts) — v0
-- ✓ CSS-стили для .tv-section, .tv-shelf, .channel-card, .content-card (~350 строк) — v0
-- ✓ Next.js remotePatterns для CDN 24h.tv — v0
-- ✓ Интеграция шлейфов на страницу /tv — v0
+- ✓ Компонент ChannelCard с HLS-плеером (hls.js dynamic import, AbortController) — v1.0
+- ✓ Компонент TvChannelShelf — горизонтальный scroll со стрелками — v1.0
+- ✓ Компонент ContentShelf — горизонтальный scroll для постеров — v1.0
+- ✓ CSS 140%-расширение карточек при hover (position: absolute overlay) — v1.0
+- ✓ API-слой: гостевой токен 24h.tv через curl (обход QRATOR TLS fingerprinting) — v1.0
+- ✓ Динамические данные каналов и новинок из API 24h.tv — v1.0
+- ✓ Шлейфы на главной странице и /tv — v1.0
+- ✓ Визуальная полировка, адаптивность, карточки "Смотреть все" — v1.0
+- ✓ Persistent token cache (.tv-token-cache.json) — v1.0
 
 ### Active
 
-- [ ] Hover-эффект как на 24h.tv: карточка расширяется до ~140% ширины, перекрывает соседние, плавная анимация с задержкой 200ms
-- [ ] Рабочие HLS-стримы через API 24h.tv (гостевой токен)
-- [ ] Данные каналов динамически из API 24h.tv (вместо захардкоженных)
-- [ ] Данные «Новинки» динамически из API 24h.tv (/row/novinki)
-- [ ] Визуальная полировка: шрифты, цвета, отступы, бейджи — максимально близко к 24h.tv
-- [ ] Шлейфы на главной странице (сейчас только на /tv)
-- [ ] Шлейф «Новинки»: hover-эффект на постерах, рейтинг, стиль как на 24h.tv
-- [ ] Адаптивность: 6→5→4→2.5 карточек в зависимости от ширины экрана
+- [ ] Стабильная работа HLS-стримов: QRATOR rate-limiting блокирует запросы к API 24h.tv, стримы не грузятся
+- [ ] Надёжное получение/обновление токена несмотря на QRATOR anti-bot
+
+## Current Milestone: v1.1 QRATOR Stability Fix
+
+**Goal:** HLS-стримы и расписания каналов стабильно работают, не падая из-за QRATOR rate-limiting
+
+**Target features:**
+- Задержки между запросами к API (обход rate-limit)
+- Retry с exponential backoff при блокировке
+- Проактивное обновление токена до истечения
+- Circuit breaker для batch-запросов расписаний
 
 ### Out of Scope
 
@@ -64,8 +68,9 @@
 | hls.js вместо video.js | Легковеснее, нужен только HLS | — Pending |
 | Нативный scroll вместо Embla | Проще, меньше зависимостей, scroll-snap | ✓ Good |
 | CDN 24h.tv для изображений | Работает без авторизации, быстро | ✓ Good |
-| Гостевой токен 24h.tv для стримов | Единственный способ получить HLS-потоки без полной авторизации | — Pending |
-| CSS-анимация для hover (не JS) | Плавность, производительность GPU | — Pending |
+| Гостевой токен 24h.tv для стримов | Единственный способ получить HLS-потоки без полной авторизации | ✓ Good |
+| CSS-анимация для hover (не JS) | Плавность, производительность GPU | ✓ Good |
+| curl вместо fetch для API 24h.tv | QRATOR блокирует Node.js по TLS fingerprint (JA3) | ✓ Good |
 
 ---
-*Last updated: 2026-03-09 after initialization*
+*Last updated: 2026-03-12 after v1.1 milestone start*

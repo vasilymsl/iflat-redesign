@@ -1,36 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
+milestone: v1.1
+milestone_name: QRATOR Stability Fix
 status: planning
-stopped_at: Completed 02-api-layer-01-PLAN.md
-last_updated: "2026-03-09T19:17:43.058Z"
-last_activity: 2026-03-09 — Roadmap created, ready to begin Phase 1
+stopped_at: null
+last_updated: "2026-03-12"
+last_activity: 2026-03-12 — Milestone v1.1 started
 progress:
-  total_phases: 5
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-09)
+See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** При наведении на карточку канала пользователь мгновенно видит живой эфир
-**Current focus:** Phase 1 — CSS Expand Architecture
+**Current focus:** Milestone v1.1 — QRATOR Stability Fix
 
 ## Current Position
 
-Phase: 1 of 5 (CSS Expand Architecture)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-03-09 — Roadmap created, ready to begin Phase 1
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-12 — Milestone v1.1 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
