@@ -1,329 +1,348 @@
 # Architecture Patterns
 
 **Domain:** TV content shelves with HLS preview (iFlat / 24h.tv integration)
-**Researched:** 2026-03-09
-**Based on:** Direct analysis of existing codebase at `iflat-redesign/src/`
+**Researched:** 2026-03-12
+**Based on:** Direct analysis of existing codebase — `iflat-redesign/src/lib/tv-token.ts` (complete read)
+**Milestone scope:** v1.1 QRATOR Stability Fix — rate-limiting integration
 
 ---
 
-## Existing Component Map
-
-The v0 baseline already exists. Architecture analysis is based on what is built:
+## Current Architecture (as-built, v1.0)
 
 ```
-app/tv/page.tsx (Server Component)
-  └── <section class="tv-section">           ← dark background wrapper
-        ├── tv-section__header               ← 24TV logo + tagline (static)
-        ├── <TvChannelShelf>                 ← "Бесплатные ТВ-каналы"
-        │     └── <ChannelCard> × N          ← HLS preview card
-        └── <ContentShelf>                   ← "Новинки"
-              └── content-card × N           ← poster card (inline JSX, no sub-component)
-```
+src/lib/tv-token.ts                          ← singleton, all 24h.tv I/O
+  ├── curlJsonSync()                         ← sync curl via execSync, rate-limit via sleep cmd
+  ├── curlJson()                             ← async wrapper: rate-limit + retry/backoff
+  ├── fetchNewGuestToken()                   ← 4-step auth: create user → login → device → auth
+  ├── reloginWithCachedCredentials()         ← 2-step re-auth using saved username/password
+  ├── getGuestToken()                        ← public: token cache + proactive refresh at 25% TTL
+  ├── getStreamUrl(internalId)               ← public: curlJson GET /stream + 401 retry
+  ├── fetchChannelsFromApi()                 ← curlJson GET /v2/rows/freechannels
+  ├── fetchCurrentPrograms(channelIds[])     ← sequential loop: curlJson per channel, circuit breaker at 3 fails
+  ├── fetchNovinkiFromApi()                  ← curlJson GET /v2/rows/novinki-*
+  ├── getChannels()                          ← public: cache + dedup + calls fetchCurrentPrograms
+  └── getNovinki()                           ← public: cache + dedup
 
----
+src/app/api/tv/stream/[id]/route.ts          ← thin proxy: calls getStreamUrl(), returns { streamUrl }
 
-## Recommended Architecture (target state)
+Global state (process lifetime):
+  globalThis.__tvTokenCache                  ← token, expiresAt, tokenIssuedAt, serial, username, password
+  globalThis.__tvChannelsCache               ← channels array, expiresAt, inflightPromise
+  globalThis.__tvNovinkiCache                ← content array, expiresAt, inflightPromise
+  globalThis.__tvScheduleCache               ← Map<channelId, { title, img }>, expiresAt
 
-```
-app/tv/page.tsx (Server Component)
-  └── TvSection (Server Component or thin wrapper)
-        ├── TvSectionHeader                  ← logo + tagline, static
-        ├── TvChannelShelf                   ← "use client", scroll + arrows
-        │     └── ChannelCard × N            ← "use client", HLS lifecycle
-        │           ├── <img> thumbnail      ← always rendered, placeholder
-        │           ├── <video> element      ← always in DOM, src set on hover
-        │           ├── LIVE badge           ← visible when videoReady
-        │           └── progress bar         ← always rendered
-        └── ContentShelf                     ← "use client", scroll + arrows
-              └── ContentCard × N            ← can stay inline or extract
-
-app/page.tsx (Server Component)
-  └── TvSection (same component, reused)
-
-lib/api/tv.ts                                ← API client (24h.tv)
-  ├── getGuestToken()                        ← POST /v2/users
-  ├── getChannels()                          ← GET /v2/channels
-  ├── getChannelStream(id)                   ← GET /v2/channels/{id}/stream
-  └── getNewReleases()                       ← GET /v2/rows/novinki or similar
-
-config/tv-shelves.ts                         ← static fallback / seed data (exists)
+Persistent state (disk):
+  .tv-token-cache.json                       ← survives server restart: token, expiresAt, serial, username, password
 ```
 
 ---
 
-## Component Boundaries
+## Rate-Limiting Architecture (v1.1 target)
 
-| Component | Responsibility | Knows About | Does NOT Know About |
-|-----------|---------------|-------------|---------------------|
-| `app/tv/page.tsx` | Page assembly, metadata | TvChannelShelf, ContentShelf, data fetching | HLS internals, scroll state |
-| `TvChannelShelf` | Horizontal scroll container, prev/next arrows, scroll state | ChannelCard, ChannelData type | HLS, API |
-| `ChannelCard` | Single channel: thumbnail, video lifecycle, hover state | hls.js (dynamic import), streamUrl | Shelf scroll, sibling cards |
-| `ContentShelf` | Horizontal scroll container, prev/next arrows for posters | ContentItem type | Video, API details |
-| `lib/api/tv.ts` | Network requests, token management, data normalization | 24h.tv API spec | React, components |
-| `config/tv-shelves.ts` | Static seed data, used as fallback | ChannelData, ContentItem types | API, network |
+### Layered Defense Model
+
+Rate-limiting is structured in three layers. Each layer has a distinct responsibility and scope.
+
+```
+Layer 1: Inter-request spacing (curlJson level)
+  → Enforces minimum gap between consecutive API calls
+  → Scope: ALL requests through curlJson
+
+Layer 2: Auth-step spacing (fetchNewGuestToken / reloginWithCachedCredentials)
+  → Additional delay between each of the 4 auth steps
+  → Scope: auth flows only
+
+Layer 3: Batch circuit breaker (fetchCurrentPrograms)
+  → Stops schedule batch if N consecutive failures
+  → Scope: schedule loop only
+```
+
+This is the correct layering. Putting rate-limiting at the `curlJson` level (Layer 1) is the right call:
+- Single enforcement point: impossible to accidentally bypass it
+- Auth callers naturally get inter-request spacing without extra code
+- Data callers (channels, novinki, schedule) get it automatically
+
+**Do NOT move rate-limiting to the caller level** — that creates N separate enforcement points that will diverge.
 
 ---
 
-## Data Flow
+## Component Boundaries (v1.1 scope)
+
+| Function | Responsibility | Rate-limit layer | Status |
+|----------|---------------|-----------------|--------|
+| `curlJsonSync()` | Sync HTTP via curl, enforces `DELAY_BETWEEN_REQUESTS_MS` via execSync sleep | Layer 1 (sync) | Implemented |
+| `curlJson()` | Async wrapper: async sleep before call + retry/backoff on failure | Layer 1 (async) | Implemented |
+| `fetchNewGuestToken()` | Full 4-step auth with `DELAY_AUTH_STEP_MS` between steps | Layer 2 | Implemented |
+| `reloginWithCachedCredentials()` | 2-step re-auth with `DELAY_AUTH_STEP_MS` delays | Layer 2 | Implemented |
+| `getGuestToken()` | Cache check + proactive refresh at `PROACTIVE_REFRESH_RATIO=0.25` | Token lifecycle | Implemented |
+| `fetchCurrentPrograms()` | Sequential loop, `failCount` circuit breaker stops at 3 consecutive fails | Layer 3 | Implemented (verify circuit breaker threshold) |
+| `getStreamUrl()` | 401 detection → invalidate token → sleep → retry | 401 recovery | Implemented |
+
+---
+
+## Data Flow (with rate-limiting)
+
+### SSR page load (app/page.tsx and app/tv/page.tsx)
 
 ```
-Build time (Server):
-  app/tv/page.tsx
-    → await getChannels()         ← lib/api/tv.ts → POST /v2/users (token) → GET /v2/channels
-    → await getNewReleases()      ← lib/api/tv.ts → GET /v2/rows/novinki
-    → passes ChannelData[] prop to <TvChannelShelf>
-    → passes ContentItem[] prop to <ContentShelf>
-
-Runtime (Client — hover):
-  ChannelCard.handleMouseEnter()
-    → setTimeout(200ms)
-    → ChannelCard.startStream()
-      → dynamic import("hls.js")       ← bundle split, loaded once
-      → Hls.loadSource(streamUrl)       ← streamUrl from props (set at build/SSR)
-      → video.play()
-      → "playing" event → setVideoReady(true) → video fades in
-
-  ChannelCard.handleMouseLeave()
-    → clearTimeout
-    → ChannelCard.stopStream()
-      → AbortController.abort()         ← cancels pending event listeners
-      → hls.destroy()
-      → video.pause() + removeAttribute("src") + video.load()
-      → setVideoReady(false)
+Server render request
+  → getChannels()
+      → getGuestToken()
+          If cache hit and TTL > 25%: return cached token (no API call)
+          If cache hit and TTL < 25%: return cached token + start background refresh
+          If cache miss: reloginWithCachedCredentials() or fetchNewGuestToken()
+            → curlJson (enforces 350ms gap + retry/backoff)
+            → DELAY_AUTH_STEP_MS (500ms) between each auth step
+      → curlJson GET /v2/rows/freechannels
+          → enforces 350ms minimum gap from lastRequestAt
+      → fetchCurrentPrograms([15 channel IDs])
+          → for each channelId:
+              → curlJson GET /v2/channels/{id}/schedule
+                  → 350ms gap enforced
+              → if failCount >= 3: STOP LOOP (circuit breaker)
+  → getNovinki()
+      → getGuestToken() (likely cache hit after above)
+      → curlJson GET /v2/rows/novinki-*
+          → 350ms gap enforced
 ```
 
-**Token flow (to be implemented):**
+**Total schedule batch worst case:** 15 channels × 350ms = ~5.25 seconds. With circuit breaker, stops at 3 consecutive failures.
+
+**Cache hit case:** If __tvScheduleCache is warm (within 10min) and __tvChannelsCache is warm (within 15min), zero API calls on page render. This is the steady-state.
+
+### Client hover (ChannelCard → /api/tv/stream/[id])
+
 ```
-Server (Next.js Route Handler or fetch at build):
-  POST https://api.24h.tv/v2/users { is_guest: true }
-  → { access_token: "..." }
-  → GET /v2/channels?token=...
-  → GET /v2/channels/{id}/stream → { url: "...m3u8?token=..." }
-  → streamUrl baked into props passed to ChannelCard
-  → No token exposed in client JS
+User hovers card
+  → ChannelCard: 200ms debounce timer
+  → GET /api/tv/stream/[id]
+      → route.ts → getStreamUrl(internalId)
+          → getGuestToken() (almost always cache hit)
+          → curlJson GET /v2/channels/{apiId}/stream
+              → 350ms gap enforced (shared lastRequestAt with all other requests)
+          → If status_code === 401:
+              → invalidateToken()
+              → sleep(500ms)
+              → getGuestToken() (triggers re-auth)
+              → curlJson retry
+  → returns { streamUrl }
+  → ChannelCard: hls.js loads stream
 ```
 
 ---
 
-## CSS Architecture for Expand-on-Hover
+## Sync vs Async: The execSync Bridge
 
-The current implementation uses `scale(1.05)` on `.channel-card-inner`. The target is 24h.tv-style expand (~140% width) that overlaps neighbors.
+**Current pattern:** `curlJsonSync` uses `execSync("sleep X")` for rate-limiting, then `curlJson` adds an async `sleep()` before calling `curlJsonSync`. This creates double-enforcement, which is safe but slightly redundant.
 
-**The core problem:** overflow:hidden on `.tv-shelf__scroll` clips expanded cards. Two standard solutions:
+**Why this is acceptable:**
+- `execSync` blocks the Node.js event loop thread. This is already the case for the curl call itself.
+- Adding async sleep before the sync call just shifts the block slightly later, preventing the async sleep from being skipped.
+- The `lastRequestAt` timestamp is updated inside `curlJsonSync` after the call completes, so the next `curlJson` call correctly measures elapsed time.
 
-### Solution A: overflow:visible on scroll container + JS-based scroll (recommended)
-
+**The bridge flow:**
 ```
-.tv-shelf__scroll {
-  overflow: visible;           /* allow cards to expand outside */
-  /* Native scroll-snap breaks when overflow:visible — use JS scroll only */
-}
-
-.channel-card {
-  position: relative;
-  z-index: 1;
-  transition: z-index 0s 0.25s;   /* delay z-index reset until after shrink */
-}
-
-@media (hover: hover) and (min-width: 768px) {
-  .channel-card:hover {
-    z-index: 20;
-    transition: z-index 0s;
-  }
-
-  .channel-card:hover .channel-card-inner {
-    transform: scaleX(1.4) scaleY(1.3);
-    transform-origin: center center;  /* or left/right based on position */
-    transition: transform 0.25s ease-out;
-    transition-delay: 0.2s;
-  }
-}
+curlJson() [async]:
+  1. async sleep if elapsed < 350ms  ← yields event loop
+  2. curlJsonSync() [sync]:
+     a. sync sleep via execSync if STILL elapsed < 350ms  ← safety net
+     b. execSync("curl ...")  ← blocks thread
+     c. updates lastRequestAt
+  3. return result or retry with backoff
 ```
 
-**Transform-origin rule:**
-- First card: `transform-origin: left center`
-- Last visible card: `transform-origin: right center`
-- Middle cards: `transform-origin: center center`
-- Detecting first/last requires JS or CSS `:first-child` / `:last-child`
-
-### Solution B: position:absolute overlay (alternative)
-
-On hover, clone/position a larger version of the card as `position:absolute` over the shelf. More complex but allows arbitrary size. Netflix uses this. Requires JS to calculate position.
-
-**Recommendation: Solution A** for this project. The scroll container already uses JS for prev/next arrows. Switching from `overflow-x:auto` to `overflow:visible` with JS-only scroll is a contained change. The `scroll-snap-type` must be removed (it requires overflow scroll), and manual scroll behavior already exists in `TvChannelShelf.scroll()`.
+**Critical constraint:** `lastRequestAt` is a module-level `let` variable. It is shared across ALL concurrent callers. If two requests arrive simultaneously, the second will correctly wait. This is the intended behavior — there is one shared "last request" clock for the whole process.
 
 ---
 
-## Video Lifecycle State Machine
+## Proactive Token Refresh Architecture
 
 ```
-IDLE
-  → (mouseenter + streamUrl exists)
-  → PENDING (200ms timer running)
-    → (mouseleave before timer) → IDLE
-    → (timer fires) → LOADING
-      → (hls.js importing) → LOADING
-        → (manifest parsed, play() called) → BUFFERING
-          → (first frame, "playing" event) → PLAYING (videoReady=true, video visible)
-            → (mouseleave) → CLEANUP
-              → (hls.destroy, src removed) → IDLE
-        → (fatal HLS error) → IDLE
-        → (AbortController aborted) → IDLE
+getGuestToken() logic:
+
+if token valid AND remaining > 25% of total TTL:
+  return cached token                        ← zero latency
+
+if token valid AND remaining < 25% of total TTL:
+  if no inflight refresh:
+    fire relogin/fetchNewGuestToken() in background
+    .catch: log warning, return current token (still valid)
+    .finally: clear inflightPromise
+  return current token immediately            ← zero latency, refresh happening in background
+
+if token expired:
+  if inflight: await it                      ← deduplicate
+  else: fire new auth, await it              ← blocking refresh
 ```
 
-**Critical invariant:** AbortController is checked at every async step. If user moves mouse before hls.js finishes loading (~50-200ms dynamic import), the load is cancelled and no HLS instance is created.
+**Why 25% threshold works:** 24h.tv tokens appear to last ~90 minutes. 25% = ~22 minutes of buffer. Auth flow takes at most ~4 requests × 350ms + 3 × 500ms delays ≈ 2.9 seconds. The buffer is more than sufficient.
 
-**Memory leak risk:** If `hlsRef.current` is not destroyed on unmount. Already handled via `useEffect` cleanup returning `hls.destroy()`. Must be preserved in all future edits to ChannelCard.
+**Proactive refresh protects against:** Server staying up for hours, token silently expiring, next user getting a slow blocking re-auth. With proactive refresh, re-auth happens in the background during a cache hit period.
 
 ---
 
-## Scalability Considerations
+## Schedule Batch: Circuit Breaker Design
 
-| Concern | Current (static data) | With live API | With 50+ cards visible |
-|---------|----------------------|---------------|------------------------|
-| HLS instances | 1 max (only hovered) | Same — per-card lazy | Same — 1 active at a time |
-| hls.js bundle | Dynamic import, split | Cached after first hover | Loaded once, reused |
-| API token | N/A (hardcoded URLs) | Single guest token, server-side | Token refresh strategy needed |
-| Image loading | Next.js Image (unoptimized=true) | Same, CDN URLs | Lazy via `sizes` attribute |
-| scroll performance | Native scroll | Same | Same |
-
----
-
-## Patterns to Follow
-
-### Pattern 1: Server-Fetched, Client-Rendered Shelf
-
-**What:** Page fetches channel data server-side (RSC), passes serializable props to client shelf.
-**When:** Channel list changes at most hourly. Guest token is stable.
-**Why:** No client-side loading state, no skeleton, instant render. streamUrl must be fetched at runtime (tokens expire), so a two-step approach is needed: channel list at build/request, individual streamUrls fetched lazily on hover.
+`fetchCurrentPrograms` iterates 15 channel IDs sequentially. The circuit breaker:
 
 ```typescript
-// app/tv/page.tsx (server)
-const channels = await getChannels(); // no streamUrl yet
-// streamUrl fetched in ChannelCard on hover:
-// GET /v2/channels/{id}/stream via Next.js Route Handler (to hide token)
-```
-
-### Pattern 2: Route Handler as Token Proxy
-
-**What:** Next.js Route Handler at `app/api/tv/stream/[id]/route.ts` calls 24h.tv with server-side token, returns stream URL.
-**When:** CORS blocks direct client requests to 24h.tv API.
-**Why:** Keeps access_token off the client. Adds ~50-100ms latency but acceptable for hover-triggered load.
-
-```typescript
-// app/api/tv/stream/[id]/route.ts
-export async function GET(req, { params }) {
-  const token = await getOrRefreshGuestToken(); // cached in memory/KV
-  const data = await fetch(`https://api.24h.tv/v2/channels/${params.id}/stream`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return Response.json(await data.json());
+let failCount = 0;
+for (const chId of channelIds) {
+  if (failCount >= 3) { break; }  // circuit opens
+  try {
+    // ... curlJson ...
+    failCount = 0;  // reset on success
+  } catch {
+    failCount++;
+  }
 }
 ```
 
-### Pattern 3: Single hls.js Import Per Session
+**Why 3 consecutive failures:** QRATOR blocks at the IP level. If it's blocking, all requests will fail. Three failures is enough signal that the block is active — continuing wastes time and burns rate-limit budget.
 
-**What:** Dynamic import of hls.js at `startStream()` time; Next.js caches the module.
-**When:** Always — never import hls.js at the top of the file.
-**Why:** hls.js is ~200KB. Importing statically adds it to the initial bundle. After first hover loads it, subsequent hovers reuse the cached module instantly.
+**What happens on partial results:** `fetchCurrentPrograms` caches partial results if `result.size > 0`. This means even 1 successful schedule fetch preserves those thumbnails. Channels with no schedule data fall back to `ch.cover.color_bg` (logo with background color), which is a decent visual fallback.
+
+**Potential improvement:** The circuit breaker threshold (3) is hardcoded. Consider making it a constant like the other delay values. Not blocking for v1.1 but worth noting.
+
+---
+
+## Retry/Backoff Architecture
+
+`curlJson` implements exponential backoff:
+
+```
+Attempt 0: fails → wait 2000ms × 2^0 = 2000ms
+Attempt 1: fails → wait 2000ms × 2^1 = 4000ms
+Attempt 2: fails → wait 2000ms × 2^2 = 8000ms
+Attempt 3: final throw
+```
+
+**Total wait before failure:** 2 + 4 + 8 = 14 seconds. Plus ~3 × 350ms for the requests themselves ≈ 15 seconds total.
+
+**Implication for SSR:** If QRATOR is actively blocking AND the cache is cold, a page render can take up to 15 seconds before giving up. This is acceptable for server-side behavior (Next.js renders on demand). The solution is ensuring caches are warm.
+
+**Implication for /api/tv/stream/[id]:** Stream URL requests happen on user hover (client-triggered). A 15-second timeout is too long for interactive UX. The route handler's `getStreamUrl()` wraps its call in a try/catch that returns `null` on error, which the client handles gracefully (no stream shown). The backoff in `curlJson` runs before returning null, so a blocked stream request will still wait 14 seconds server-side before the 404 response. This is a known limitation.
+
+---
+
+## Persistent Cache: Restart Resilience
+
+`.tv-token-cache.json` contains: token, expiresAt, serial, username, password.
+
+**Critical path on server restart:**
+```
+module load → loadPersistentCache() → populate globalThis.__tvTokenCache
+  → if token exists AND expiresAt > now: serve immediately (zero auth requests)
+  → if token expired but username/password exist: reloginWithCachedCredentials() (2 requests)
+  → if nothing: fetchNewGuestToken() (4 requests including POST /v2/users)
+```
+
+**The POST /v2/users problem:** QRATOR rate-limits this endpoint most aggressively. The persistent cache avoids it entirely on restarts if credentials are saved. The fallback (`fetchNewGuestToken`) only triggers when the persistent cache is empty — meaning a fresh install or manual cache deletion.
+
+**Manual recovery path** (documented in MEMORY.md): Open 24h.tv in browser → DevTools → copy access_token → paste into `.tv-token-cache.json`. This bypasses the blocked endpoint entirely.
+
+---
+
+## Integration Points for New Work
+
+The existing implementation is substantially complete. The gap between current state and v1.1 requirements is primarily validation and edge-case hardening, not new architecture.
+
+### What is implemented and working:
+- `curlJson`: async rate-limiting + retry/backoff — complete
+- `curlJsonSync`: sync rate-limiting via execSync sleep — complete
+- `fetchNewGuestToken`: step delays — complete
+- `reloginWithCachedCredentials`: step delays — complete
+- `getGuestToken`: proactive refresh at 25% TTL — complete
+- `fetchCurrentPrograms`: sequential with circuit breaker — complete
+- Persistent file cache — complete
+
+### What needs verification/hardening:
+1. **Stream request timeout under backoff:** `/api/tv/stream/[id]` can timeout for 14+ seconds during backoff. Consider adding a separate shorter timeout for stream requests vs auth requests.
+2. **Circuit breaker threshold as constant:** `3` is hardcoded in `fetchCurrentPrograms`. Should be a named constant alongside `MAX_RETRIES`, `DELAY_BETWEEN_REQUESTS_MS`.
+3. **Schedule cache invalidation on 401:** If the token expires mid-schedule-fetch and `curlJson` gets a non-exception error response (e.g., `{ status_code: 401 }`), the schedule loop does not detect it as a failure — it counts as success (no exception thrown). The `failCount` mechanism only catches exceptions (network errors, timeouts). Add status_code checking in the schedule loop.
+4. **Proactive refresh + inflight dedup interaction:** The proactive refresh fires a background promise but does NOT deduplicate with a concurrent blocking refresh. If a token expires exactly at page render time and proactive refresh is also running, two auth flows could run concurrently. The `inflightPromise` check prevents this for blocking requests, but proactive refresh bypasses it. This is low-probability but should be verified.
+
+---
+
+## Build Order (v1.1 scope)
+
+```
+1. Add CIRCUIT_BREAKER_THRESHOLD constant to tv-token.ts
+   └── trivial, low risk, improves readability
+
+2. Add schedule loop 401 detection
+   └── fetchCurrentPrograms: check Array.isArray(schedule) is already done,
+       but need to also check for { status_code: 401 } response
+   └── increment failCount on non-array response, not just exceptions
+
+3. Add stream-specific timeout
+   └── getStreamUrl: wrap curlJson with a shorter timeout OR
+       add separate MAX_RETRIES_STREAM=1 constant (no backoff for interactive requests)
+   └── Tradeoff: faster UX failure vs reliability
+
+4. Verify proactive refresh race condition
+   └── Code review: getGuestToken() proactive path vs concurrent expiry
+   └── Low risk, may not need code change — just confirmation
+
+5. Integration test: cold start with blocked IP
+   └── Delete .tv-token-cache.json, simulate QRATOR block, verify fallback behavior
+   └── Not code, but critical for v1.1 sign-off
+```
+
+**Critical path:** 2 → 3 (both are small, isolated changes to tv-token.ts)
 
 ---
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: overflow:hidden on Scroll Container During Hover Expand
+### Anti-Pattern 1: Moving Rate-Limiting Out of curlJson
 
-**What:** Keeping `overflow-x:auto` (or hidden) on `.tv-shelf__scroll` while trying to expand cards with `transform: scale(1.4)`.
-**Why bad:** Browser clips the expanded card at the scroll container boundary. The expansion appears to do nothing or gets clipped.
-**Instead:** Use `overflow:visible` with JS scroll (already partially present) or use `position:absolute` overlay approach.
+**What goes wrong:** Adding per-caller delays (e.g., delays in `getChannels`, `getNovinki` before calling the API) instead of at the transport layer.
+**Why bad:** Creates multiple enforcement points that diverge as code evolves. One missed call bypasses rate-limiting entirely.
+**Instead:** All rate-limiting stays in `curlJson`/`curlJsonSync`. Callers should NOT add their own delays.
 
-### Anti-Pattern 2: Fetching Stream URL on Page Load
+### Anti-Pattern 2: Parallel Schedule Requests
 
-**What:** Calling `GET /v2/channels/{id}/stream` for all channels during SSR or initial client render.
-**Why bad:** Creates N concurrent requests (15+ channels), exhausts guest token rate limits, loads HLS manifests for streams nobody watches.
-**Instead:** Fetch streamUrl lazily inside `startStream()` only when user actually hovers.
+**What goes wrong:** Converting `fetchCurrentPrograms` loop to `Promise.all(channelIds.map(...))`.
+**Why bad:** Fires 15 concurrent requests to QRATOR simultaneously. This is exactly the pattern that triggers the block.
+**Instead:** Sequential loop with per-request rate-limiting. Current implementation is correct.
 
-### Anti-Pattern 3: Creating HLS Instance Without Destroying Previous
+### Anti-Pattern 3: Treating execSync Sleep as Reliable Wait
 
-**What:** Calling `startStream()` without checking/destroying an existing `hlsRef.current`.
-**Why bad:** Memory leak — multiple Hls instances attached to the same video element, bandwidth waste.
-**Instead:** Always call `stopStream()` before `startStream()`, and check `hlsRef.current` in every code path. Already implemented correctly, must not be regressed.
+**What goes wrong:** Relying ONLY on `execSync("sleep X")` inside `curlJsonSync` for rate-limiting, removing the async pre-sleep in `curlJson`.
+**Why bad:** If two async callers check `lastRequestAt` at nearly the same time (before either makes a request), both calculate `elapsed < DELAY` as false — but by different amounts. The sync sleep inside `curlJsonSync` is a safety net, not the primary mechanism. The async sleep in `curlJson` is what provides cooperative scheduling.
+**Instead:** Keep both: async sleep in `curlJson` (cooperative) + sync sleep in `curlJsonSync` (safety net).
 
-### Anti-Pattern 4: z-index Without Stacking Context Awareness
+### Anti-Pattern 4: Invalidating Schedule Cache on Token Refresh
 
-**What:** Setting `z-index: 20` on `.channel-card:hover` inside a scroll container that has `position:relative` but a parent with `transform` or `will-change`.
-**Why bad:** CSS `transform` creates a new stacking context. If `.tv-shelf__scroll` or `.tv-shelf__slider` has `transform` applied, z-index of children is scoped to that context and cannot overlap outside it.
-**Instead:** Ensure the stacking context hierarchy allows the hovered card to appear above siblings and the shelf chrome. Test in all target browsers.
+**What goes wrong:** Clearing `__tvScheduleCache` whenever the token is refreshed (because "the old token was used to fetch it").
+**Why bad:** Schedule data (program titles and thumbnails) has its own TTL (10 minutes). It doesn't become invalid when the auth token rotates.
+**Instead:** Token cache and data caches are independent. Only invalidate schedule/channels/novinki caches based on their own TTL.
 
-### Anti-Pattern 5: Binding Scroll Events Without Passive Flag
+### Anti-Pattern 5: Blocking SSR on Schedule Fetch Failure
 
-**What:** `el.addEventListener("scroll", handler)` without `{ passive: true }`.
-**Why bad:** Blocks the browser's scroll optimization, causes jank.
-**Instead:** Always pass `{ passive: true }` for scroll handlers. Already done in both shelf components — must not be removed.
-
----
-
-## Build Order (Phase Dependencies)
-
-```
-1. lib/api/tv.ts
-   └── No dependencies. Pure fetch functions.
-       Build first — all other phases depend on this.
-
-2. app/api/tv/stream/[id]/route.ts  (if CORS proxy needed)
-   └── Depends on: lib/api/tv.ts (token logic)
-       Can be deferred if direct client calls work.
-
-3. CSS: expand-on-hover animation
-   └── Depends on: nothing (pure CSS change to globals.css)
-       Can be built in parallel with API layer.
-       Blocks: ChannelCard hover UX validation.
-
-4. ChannelCard (hover expansion + lazy streamUrl fetch)
-   └── Depends on: CSS animation (3), API proxy route (2) or direct URL
-       Central piece — most work here.
-
-5. TvChannelShelf (responsive cards: 6→5→4→2.5)
-   └── Depends on: CSS (3), ChannelCard (4)
-       Mostly CSS changes, low risk.
-
-6. ContentShelf (hover on posters, rating badge, styling)
-   └── Depends on: CSS (3)
-       Independent of video/HLS work.
-
-7. Data wiring: replace static config with API data
-   └── Depends on: lib/api/tv.ts (1)
-       Connect app/tv/page.tsx and app/page.tsx to live data.
-
-8. Main page integration
-   └── Depends on: all above
-       Low risk — reuse same components.
-```
-
-**Critical path:** 1 → 3 → 4 → 7 → 8
+**What goes wrong:** Propagating `fetchCurrentPrograms` errors up through `getChannels` as an unhandled rejection.
+**Why bad:** Schedule fetch failing (common when QRATOR is active) kills the entire page render.
+**Instead:** Current pattern is correct — `fetchCurrentPrograms` catches internally and returns partial results. `getChannels` has a separate `try/catch` around it. Channels render without schedule thumbnails, which is graceful.
 
 ---
 
-## Phase-Specific Warnings
+## Scalability Considerations
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| CSS expand animation | overflow:hidden clips expanded card | Switch to overflow:visible before implementing scale |
-| CSS expand animation | transform-origin: first/last card looks wrong | Use CSS :first-child/:last-child or JS dataset attribute |
-| HLS stream fetch | CORS blocks client direct to api.24h.tv | Test first; add Route Handler proxy only if needed |
-| HLS stream fetch | Guest token expires during session | Cache token with TTL (expiry - 60s buffer), refresh on 401 |
-| API data | /v2/rows/novinki endpoint may not exist | Verify endpoint, have static fallback ready |
-| Main page integration | TvSection adds ~200KB (hls.js) to main bundle | hls.js is dynamic import — only loads on first hover, not at page load |
-| Responsive cards | 2.5 cards on mobile causes snap issues with overflow:visible | Test scroll-snap removal on mobile, may need overflow-x:auto only on mobile |
+| Concern | Current state | With heavy traffic | Notes |
+|---------|--------------|-------------------|-------|
+| Rate-limiting under concurrent requests | Single `lastRequestAt` variable serializes requests | Multiple simultaneous SSR renders will queue behind each other | Acceptable — Next.js caches SSR, rare for many concurrent cold renders |
+| Token refresh storms | `inflightPromise` deduplicates | Multiple renders hitting expired token: one refreshes, others await | Correctly handled |
+| Schedule batch on every SSR render | 10min TTL prevents re-fetching | Cache hit = zero API calls | Correct |
+| Stream requests per user hover | 1 request per hover | N users hovering N channels: N concurrent requests | Each goes through curlJson queue — they serialize. Adds latency but prevents block |
+| QRATOR IP block | Persistent cache avoids POST /v2/users | Block affects all requests until IP clears | No code solution — operator must use manual token injection |
 
 ---
 
 ## Sources
 
-- Codebase analysis: `iflat-redesign/src/components/sections/ChannelCard.tsx` (direct read)
-- Codebase analysis: `iflat-redesign/src/components/sections/TvChannelShelf.tsx` (direct read)
-- Codebase analysis: `iflat-redesign/src/components/sections/ContentShelf.tsx` (direct read)
-- Codebase analysis: `iflat-redesign/src/app/globals.css` (direct read, lines 93-493)
+- Direct code read: `iflat-redesign/src/lib/tv-token.ts` (full file, 756 lines)
+- Direct code read: `iflat-redesign/src/app/api/tv/stream/[id]/route.ts` (full file, 41 lines)
 - Project spec: `.planning/PROJECT.md` (direct read)
-- Project context: `iflat-redesign/CLAUDE.md` (via system context)
-- Confidence: HIGH for existing component structure (read directly), MEDIUM for API endpoint details (based on PROJECT.md spec, not verified against live API)
+- Memory context: `.planning/../MEMORY.md` (system context)
+- Confidence: HIGH for all findings — based on direct codebase analysis, not inferred

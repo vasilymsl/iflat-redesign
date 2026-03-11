@@ -1,278 +1,229 @@
 # Technology Stack
 
-**Project:** iFlat TV Shelves — HLS Preview on Hover
-**Researched:** 2026-03-09
-**Confidence:** HIGH (based on existing codebase + package.json audit)
+**Project:** iFlat TV — Rate-Limit Fix (Milestone v1.1)
+**Researched:** 2026-03-12
+**Confidence:** HIGH (based on existing codebase audit + API behaviour analysis)
 
 ---
 
-## Context: Brownfield, Not Greenfield
+## Context: Brownfield Fix, Not New Feature
 
-The stack is largely **already installed**. This document prescribes which parts of the installed stack to USE for the TV shelf feature, what is MISSING, and what NOT to introduce. Decisions are grounded in `package.json`, the existing component code, and the architectural constraints in `PROJECT.md`.
+The existing `src/lib/tv-token.ts` already has the correct foundation:
+- `curlJsonSync` — синхронный curl с блокирующей паузой через `execSync('sleep ...')`
+- `curlJson` — async обёртка с retry + exponential backoff (3 попытки, база 2000ms)
+- `fetchCurrentPrograms` — последовательный for-loop по 15 каналам с circuit breaker (failCount >= 3)
+- `DELAY_BETWEEN_REQUESTS_MS = 350` — задержка между запросами
 
----
+**Диагноз проблемы:** Задержки и retry-логика реализованы, но есть конкретные дыры:
 
-## Installed Stack Audit
+1. `curlJsonSync` делает паузу через `execSync('sleep 0.35')` — это блокирует Node.js event loop на 350ms каждый вызов. При 15 каналах расписания: 15 × 350ms = 5.25 секунды блокировки.
+2. Несколько входящих HTTP-запросов (hover разных карточек одновременно) могут инициировать параллельные вызовы `curlJson` из разных route handlers — `lastRequestAt` — единственный глобальный semaphore, но он не атомарный.
+3. Первый cold start (нет токена в кеше) делает 4 auth-запроса + до 15 schedule-запросов без серьёзного ограничения total concurrency.
 
-```
-next:             16.1.6  (App Router, Turbopack) — USE
-react:            19.2.3                           — USE
-typescript:       ^5                               — USE
-tailwindcss:      ^4      (CSS-first, @theme)      — USE for spacing/utilities only
-hls.js:           ^1.6.15                          — USE (already in ChannelCard)
-framer-motion:    ^12.34.5                         — DO NOT USE for hover card expansion
-embla-carousel-react: ^8.6.0                       — DO NOT USE (scroll-snap is simpler)
-lucide-react:     ^0.577.0                         — USE for shelf arrows only
-clsx / tailwind-merge: installed                  — USE via cn() util
-```
-
-No SWR, no React Query, no Zustand — not installed.
+**Ключевой вывод коллеги подтверждается кодом:** schedule-запросы идут последовательно, но `execSync('sleep')` — это блокирующий sleep, и если два параллельных HTTP-запроса попадают в `curlJsonSync` одновременно, `lastRequestAt` race condition пропускает паузу.
 
 ---
 
-## Recommended Stack by Feature Area
+## Recommended Approach: No New Libraries
 
-### 1. HLS Video Streaming
+### Decision: Использовать только Node.js built-ins
 
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| hls.js | ^1.6.15 (installed) | MSE-based HLS for Chrome/Firefox | HIGH |
-| Native `<video>` | Browser built-in | HLS for Safari via `canPlayType` | HIGH |
-| AbortController | Web API | Cancellation of in-flight stream load | HIGH |
+**Обоснование:** Никаких дополнительных пакетов не требуется. Правильные паттерны rate-limiting для curl+execSync реализуются через:
+- `Promise` queue (mutex) — встроенный JavaScript
+- `sleep` функция — `new Promise(resolve => setTimeout(resolve, ms))` — уже есть в коде
+- Заменить `execSync('sleep')` на `await sleep()` — убрать блокировку event loop
 
-**Why hls.js and NOT video.js:**
-`hls.js` is 80 KB gzipped vs ~450 KB for video.js. The project only needs HLS preview playback — no player controls, no playlist UI, no plugins. The existing `ChannelCard.tsx` already implements the correct pattern: dynamic `import("hls.js")` inside `startStream()`, guarded by `Hls.isSupported()` and AbortController. This is correct and must not be replaced.
+Альтернативы типа `bottleneck`, `p-limit`, `p-queue` — не нужны. Они решают проблему параллельных промисов, но в данном случае нужен simple mutex + async sleep. Добавление npm-зависимости ради 10 строк кода — over-engineering.
 
-**Configuration for preview-only mode (keep buffer tiny):**
+---
+
+## Stack Decisions by Problem Area
+
+### 1. Замена блокирующего sleep на async sleep
+
+| Компонент | Текущее состояние | Нужное состояние | Confidence |
+|-----------|------------------|-----------------|------------|
+| `curlJsonSync` rate-limit пауза | `execSync('sleep 0.35')` | `await sleep(ms)` перед curl | HIGH |
+| `curlJson` rate-limit пауза | `await sleep()` — ПРАВИЛЬНО | Без изменений | HIGH |
+
+**Почему это критично:**
+`execSync('sleep 0.35')` блокирует Node.js event loop полностью на 350ms. Во время этой паузы не обрабатываются ни входящие HTTP-запросы, ни таймеры, ни промисы. При 15 schedule-запросах серьёзных паузах суммарное время SSR страницы увеличивается на 5+ секунд.
+
+`curlJsonSync` используется только внутри `curlJson` — то есть уже в async контексте. Блокирующий execSync sleep здесь не нужен. Правильный паттерн: убрать sleep из `curlJsonSync`, добавить `await sleep()` перед вызовом `curlJsonSync` в `curlJson`.
+
+**Текущий код (проблемный):**
 ```typescript
-const hls = new Hls({
-  maxBufferLength: 3,       // 3s buffer — fast start, low RAM
-  maxMaxBufferLength: 5,    // hard cap
-  startLevel: -1,           // auto quality selection
-  enableWorker: true,       // offload MSE work to worker thread
-});
+function curlJsonSync(method: string, url: string, body?: unknown): unknown {
+  const now = Date.now();
+  const elapsed = now - lastRequestAt;
+  if (elapsed < DELAY_BETWEEN_REQUESTS_MS) {
+    execSync(`sleep ${((DELAY_BETWEEN_REQUESTS_MS - elapsed) / 1000).toFixed(2)}`); // БЛОКИРУЕТ EVENT LOOP
+  }
+  // ... curl
+}
 ```
 
-**Why dynamic import is mandatory:**
-hls.js uses `window` / `document` at import time. In Next.js App Router, components run on server during SSR even when marked `"use client"` for the initial render. Dynamic import defers the module to browser-only execution, preventing `ReferenceError: window is not defined`.
-
----
-
-### 2. CSS Hover Expansion Animation (Netflix-style 140%)
-
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| Plain CSS transitions | Browser built-in | Card expand 140% width | HIGH |
-| CSS `transform: scaleX()` + negative margins | Browser built-in | Overlap neighboring cards | HIGH |
-| CSS custom properties | Browser built-in | Parameterize scale factor | HIGH |
-
-**Why CSS and NOT Framer Motion:**
-Framer Motion is installed but is wrong for this animation because:
-1. It uses JS-driven `requestAnimationFrame` loops, adding JS thread work during hover
-2. CSS `transform` with `will-change: transform` is handled 100% on the GPU compositor thread — zero JS cost
-3. The "overlap neighbors" pattern requires `position: relative` + `z-index` + negative margins. Framer Motion `layout` animations would recalculate layout on every frame (expensive with 6+ cards)
-
-**The correct CSS pattern for 140% expand with neighbor overlap:**
-
-The current code uses `scale(1.05)` which is wrong because:
-- `scale()` scales both X and Y equally
-- It does not expand the card's layout footprint — neighbors don't move apart
-- The card appears to float over neighbors but the row height stays compressed
-
-The correct approach is **width expansion via CSS**, NOT scale:
-
-```css
-/* Shelf scroll container must NOT clip overflow */
-.tv-shelf__scroll {
-  overflow-x: auto;
-  overflow-y: visible;   /* CRITICAL: allow card to expand upward/downward */
+**Правильный код:**
+```typescript
+function curlJsonSync(method: string, url: string, body?: unknown): unknown {
+  // sleep убран — вызывается только из async curlJson
+  const args = [ "curl", ... ];
+  const cmd = args.map(...).join(" ");
+  lastRequestAt = Date.now();
+  const stdout = execSync(cmd, { encoding: "utf-8", timeout: 20_000 });
+  return JSON.parse(stdout);
 }
 
-/* Channel card base */
-.channel-card {
-  position: relative;
-  flex: 0 0 var(--card-base-width);   /* exact px, not calc% */
-  min-width: var(--card-base-width);
-  transition: none;
-}
-
-/* The inner element does the expanding */
-.channel-card-inner {
-  width: 100%;
-  transition: width 0.25s ease-out, transform 0.25s ease-out, box-shadow 0.25s ease-out;
-  transition-delay: 0.2s;  /* 200ms hover intent delay */
-}
-
-@media (hover: hover) and (min-width: 768px) {
-  .channel-card:hover .channel-card-inner {
-    width: 140%;           /* expand inner to 140% of card slot */
-    transform: translateY(-8px);   /* lift slightly */
-    z-index: 20;
-    position: relative;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-    transition-delay: 0s;
+async function curlJson(method: string, url: string, body?: unknown): Promise<unknown> {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      // Пауза здесь — правильно, в async контексте
+      const elapsed = Date.now() - lastRequestAt;
+      if (elapsed < DELAY_BETWEEN_REQUESTS_MS) {
+        await sleep(DELAY_BETWEEN_REQUESTS_MS - elapsed);
+      }
+      return curlJsonSync(method, url, body); // execSync — ок, curl сам по себе блокирующий
+    } catch (err) {
+      // ... retry
+    }
   }
 }
 ```
 
-**Why `width: 140%` on inner element instead of `scaleX(1.4)`:**
-- `scaleX(1.4)` stretches the content including text — ugly
-- `width: 140%` reflows the inner content to the new width — correct
-- The outer `.channel-card` keeps its original flex width, so neighbors don't jump
-
-**The z-index stacking context trap to avoid:**
-The `.tv-shelf__scroll` container must NOT have `overflow: hidden` or it will clip the expanded card. The current CSS has `overflow-x: auto` — which creates a stacking context on some browsers. The fix: set `overflow-y: visible` explicitly (some browsers require both to be set).
-
 ---
 
-### 3. API Integration (24h.tv)
+### 2. Promise Mutex для сериализации запросов
 
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| Next.js Route Handlers | Built-in (16.1.6) | Proxy API calls to 24h.tv, hide tokens | HIGH |
-| `fetch` with `next: { revalidate }` | React 19 built-in | Server-side data fetching with ISR | HIGH |
-| In-memory token cache (module scope) | No library needed | Store guest access_token server-side | HIGH |
+| Компонент | Назначение | Confidence |
+|-----------|-----------|------------|
+| Promise chain (module variable) | Гарантировать что curl-запросы идут строго по одному | HIGH |
+| Нет npm пакета | Реализуется в ~8 строк | HIGH |
 
-**Why a server-side API proxy is mandatory:**
-1. The 24h.tv `access_token` must never appear in the browser — it would be visible in DevTools
-2. The 24h.tv API may have CORS restrictions (`Access-Control-Allow-Origin` not set to `*`) — `PROJECT.md` explicitly flags this
-3. Next.js Route Handlers run on the server and can add auth headers transparently to the client
+**Проблема:** Если два HTTP-запроса (hover карточки A и карточки B) попадают в `curlJson` одновременно, оба читают `lastRequestAt` до того, как кто-то из них обновил его. Оба думают что пауза не нужна и оба отправляют curl почти одновременно. Это нарушает rate-limit.
 
-**API proxy architecture (no extra libraries):**
+**Решение — глобальный request queue через Promise chain:**
 
-```
-Browser Component
-  → GET /api/24tv/channels          (Next.js Route Handler)
-      → POST https://api.24h.tv/v2/users { is_guest: true }  (get token, cache 1h)
-      → GET  https://api.24h.tv/v2/channels (Bearer token)
-      → return sanitized channel list
-
-Browser Component
-  → GET /api/24tv/stream?id=123     (Next.js Route Handler)
-      → GET  https://api.24h.tv/v2/channels/123/stream (Bearer token)
-      → return { url: "https://..." }
-```
-
-**Token caching — module-level variable, NOT a database:**
 ```typescript
-// src/app/api/24tv/_token.ts
-let cachedToken: string | null = null;
-let tokenExpiry = 0;
+/** Mutex для сериализации всех curl-запросов к 24h.tv API */
+let requestQueue: Promise<void> = Promise.resolve();
 
-export async function getGuestToken(): Promise<string> {
-  if (cachedToken && Date.now() < tokenExpiry) return cachedToken;
-  const res = await fetch("https://api.24h.tv/v2/users", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ is_guest: true }),
+async function curlJson(method: string, url: string, body?: unknown): Promise<unknown> {
+  // Добавляем в очередь — ждём завершения предыдущего запроса
+  const result = requestQueue.then(async () => {
+    const elapsed = Date.now() - lastRequestAt;
+    if (elapsed < DELAY_BETWEEN_REQUESTS_MS) {
+      await sleep(DELAY_BETWEEN_REQUESTS_MS - elapsed);
+    }
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return curlJsonSync(method, url, body);
+      } catch (err) {
+        if (attempt === MAX_RETRIES) throw err;
+        await sleep(RETRY_BASE_DELAY_MS * Math.pow(2, attempt));
+      }
+    }
   });
-  const data = await res.json();
-  cachedToken = data.access_token;
-  tokenExpiry = Date.now() + 55 * 60 * 1000; // 55 min (token likely valid 1h)
-  return cachedToken!;
+
+  // requestQueue обновляется — следующий вызов ждёт нас
+  requestQueue = result.then(() => {}, () => {});
+
+  return result;
 }
 ```
 
-This works because Next.js server processes are long-lived in development and on Vercel (within the same invocation window). No Redis, no database needed.
-
-**Why NOT SWR or React Query for API calls:**
-- Neither is installed — adding them for 2 API endpoints is not justified
-- Next.js App Router's `fetch` with `revalidate` handles ISR caching natively
-- Channel data changes slowly (current program updates every ~30 min) — `revalidate: 300` is sufficient
-- Stream URLs are fetched on hover (client-side) — a simple `fetch` wrapper in the component is sufficient
+Этот паттерн (Promise chain mutex) — стандартная техника JavaScript для сериализации async операций без внешних библиотек. Каждый вызов добавляется в очередь, следующий начинается только после завершения предыдущего + задержка.
 
 ---
 
-### 4. Responsive Card Layout
+### 3. Задержка между запросами: правильные значения
 
-| Technology | Version | Purpose | Confidence |
-|------------|---------|---------|------------|
-| CSS custom properties | Browser built-in | Card count per breakpoint | HIGH |
-| CSS `calc()` | Browser built-in | Card width from container | HIGH |
+| Параметр | Текущее | Рекомендуемое | Обоснование | Confidence |
+|----------|---------|--------------|------------|------------|
+| `DELAY_BETWEEN_REQUESTS_MS` | 350ms | 400–600ms | Запас выше минимума rate-limit | MEDIUM |
+| `DELAY_AUTH_STEP_MS` | 500ms | 600ms | Auth шаги более строго rate-limited | MEDIUM |
+| `MAX_RETRIES` | 3 | 3 | Достаточно | HIGH |
+| `RETRY_BASE_DELAY_MS` | 2000ms | 2000ms | Правильный базис для exponential backoff | HIGH |
 
-**Responsive card counts (from PROJECT.md):**
+**Почему MEDIUM confidence на конкретных значениях:** Нет официальной документации rate-limit лимитов 24h.tv API. Значения — educated guess на основе наблюдений. Рекомендуется начать с 500ms и снизить если работает стабильно.
 
-| Breakpoint | Cards visible | Formula |
-|------------|--------------|---------|
-| ≥1280px | 6 | `calc((100% - 10px * 5) / 6)` |
-| 1024-1279px | 5 | `calc((100% - 10px * 4) / 5)` |
-| 768-1023px | 4 | `calc((100% - 10px * 3) / 4)` |
-| <768px | 2.5 | `calc((100% - 8px * 1.5) / 2.5)` |
-
-This is already implemented. The 2.5 cards on mobile is intentional — the partial card signals that scrolling is possible (a standard streaming platform pattern).
+**Exponential backoff formula — оставить как есть:**
+```
+attempt 0: 2000ms
+attempt 1: 4000ms
+attempt 2: 8000ms
+```
+Это стандартная формула. Для rate-limited API — правильный паттерн.
 
 ---
 
-### 5. State Management for Hover
+### 4. Schedule batch — ограничение через delay, НЕ параллельность
 
-No state library needed. The existing pattern in `ChannelCard.tsx` is correct:
+| Подход | Решение | Confidence |
+|--------|---------|-----------|
+| Параллельные Promise.all для schedule | НЕ ИСПОЛЬЗОВАТЬ | HIGH |
+| Последовательный for-loop с задержкой | Использовать (уже реализовано) | HIGH |
+| Chunk-based batching (по 3–5 каналов) | Не нужно — последовательность лучше | HIGH |
 
+**Почему Promise.all — антипаттерн для rate-limited API:**
+`Promise.all([fetch(ch1), fetch(ch2), ..., fetch(ch15)])` запустит 15 запросов практически одновременно. Даже с Promise mutex они попадут в очередь, но это не уменьшит нагрузку — просто растянет её. При этом общее время ожидания не изменится (15 × 400ms), но burst в самом начале может всё равно триггернуть rate-limiter.
+
+Текущий подход (`for...of` loop) — правильный. Каждый запрос начинается только после завершения предыдущего.
+
+**Circuit breaker (failCount >= 3) — оставить, но улучшить:**
 ```typescript
-const [isHovered, setIsHovered] = useState(false);
-const [videoReady, setVideoReady] = useState(false);
-const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+// Текущий код — правильный паттерн, но можно добавить логирование
+if (failCount >= 3) {
+  console.warn(`[tv-token] Circuit breaker triggered after ${failCount} failures`);
+  break;
+}
 ```
 
-- `isHovered`: drives CSS class that triggers the animation
-- `videoReady`: drives video opacity fade-in AFTER stream starts playing
-- `hoverTimerRef`: implements the 200ms hover intent delay (prevents flash on mouse-over)
+---
 
-**Why this is correct:**
-- State is local to each card — no global store needed
-- The 200ms delay (`setTimeout` in `handleMouseEnter`) prevents starting HLS loads when the user is just moving the mouse across the shelf
-- `AbortController` ensures that if the user un-hovers before the stream starts, the HLS instance is not created at all
+### 5. Проактивное обновление токена — оставить как есть
+
+Логика проактивного refresh (когда осталось < 25% TTL) — правильная. Единственное улучшение: убедиться что relogin тоже проходит через request queue, чтобы не конкурировать с schedule-запросами.
 
 ---
 
 ## What NOT to Use
 
-| Library | Why Avoid |
-|---------|-----------|
-| **Framer Motion** (for hover card) | GPU-composite CSS is faster; Framer Motion layout animations are expensive for 6+ cards; already mis-used in current `scale(1.05)` pattern |
-| **Embla Carousel** | Installed but overkill. Native `overflow-x: auto` + `scroll-snap-type: x mandatory` + `scroll-behavior: smooth` handles everything needed. Embla adds JS overhead and event conflicts with the hover expand animation |
-| **SWR / React Query** | Not installed, not justified for 2 endpoints. Next.js fetch with revalidate covers server-side. Client-side stream URLs need only a bare `fetch()` |
-| **video.js** | 450 KB bundle for something `hls.js` (80 KB) already does |
-| **Zustand / Jotai** | No shared state between cards — local `useState` is correct |
-| **CSS Modules** | The project uses global CSS classes (`.channel-card`, `.tv-shelf`). Mixing CSS Modules would create naming inconsistency. Stick with globals |
+| Библиотека | Почему не нужна |
+|-----------|----------------|
+| **`bottleneck`** | npm-пакет для rate-limiting. Решает ту же задачу что Promise mutex, но требует зависимости. Для одного API-клиента — избыточно |
+| **`p-limit`** | Ограничивает concurrent promises. Полезно для параллельных запросов, но здесь нужна строгая последовательность — p-limit не даёт это гарантированно |
+| **`p-queue`** | Priority queue для промисов. Более сложный аналог того же Promise mutex. Не нужен |
+| **`axios-rate-limit`** | Не применимо — используется curl, не axios/fetch |
+| **`node-rate-limiter-flexible`** | Для server-side защиты от клиентов, не для consumer-side rate limiting |
+
+---
+
+## Implementation Summary
+
+Три изменения в `src/lib/tv-token.ts`, нулевых новых зависимостей:
+
+1. **Убрать `execSync('sleep ...')` из `curlJsonSync`** — переместить паузу в `curlJson` (async контекст)
+2. **Добавить Promise mutex `requestQueue`** — гарантировать что curl-запросы строго последовательны
+3. **Увеличить `DELAY_BETWEEN_REQUESTS_MS` с 350 до 500ms** — увеличить запас над предполагаемым rate-limit
+
+Всё остальное (retry logic, circuit breaker, persistent cache, proactive refresh) — уже реализовано правильно.
 
 ---
 
 ## Installation Delta
 
-No new packages are needed. The entire feature is buildable from the installed stack:
-
 ```bash
-# Nothing to install. All dependencies are present:
-# hls.js@1.6.15      ✓ installed
-# next@16.1.6        ✓ installed (Route Handlers available)
-# react@19.2.3       ✓ installed
-# typescript@5       ✓ installed
-# tailwindcss@4      ✓ installed
-# lucide-react       ✓ installed
+# Ничего устанавливать не нужно
+# Все изменения — в существующем src/lib/tv-token.ts
 ```
-
----
-
-## Key Constraints That Affect Implementation
-
-1. **`overflow-y: visible` on shelf container** — mandatory for card expansion to not be clipped. Current CSS has `overflow-x: auto` which implicitly makes `overflow-y: auto` in some browsers (W3C spec). Explicit `overflow-y: visible` must be set.
-
-2. **`"use client"` boundary** — `ChannelCard` must remain a client component (uses refs, effects, state). `TvChannelShelf` also needs `"use client"` (scroll state). Server Components can render the shelf wrapper and pass static props.
-
-3. **`dynamic import` for hls.js is non-negotiable** — see above. Do not change to top-level import.
-
-4. **CORS for stream URLs** — stream URLs from `/api/24tv/stream?id=X` will be HLS manifests (`.m3u8`). The browser fetches these directly from 24h.tv CDN (not through the proxy — video data goes direct). CDN URLs may not have CORS issues; the API auth call does. Validate this early.
-
-5. **SSL in dev** — `PROJECT.md` notes `strict-ssl false` in current network. This affects npm install only, not runtime fetch calls.
 
 ---
 
 ## Sources
 
-- `/Users/vasilymaslovsky/Desktop/redesign/iflat-redesign/package.json` — installed versions (HIGH confidence)
-- `/Users/vasilymaslovsky/Desktop/redesign/iflat-redesign/src/components/sections/ChannelCard.tsx` — existing implementation (HIGH confidence)
-- `/Users/vasilymaslovsky/Desktop/redesign/iflat-redesign/src/app/globals.css` — existing CSS patterns (HIGH confidence)
-- `/Users/vasilymaslovsky/Desktop/redesign/.planning/PROJECT.md` — constraints, decisions, API spec (HIGH confidence)
-- hls.js GitHub README (training data, MEDIUM confidence) — maxBufferLength config options
-- MDN Web Docs (training data, HIGH confidence) — CSS overflow stacking context behavior
-- W3C CSS Overflow spec (training data, HIGH confidence) — overflow-x:auto implies overflow-y:auto rule
+- `src/lib/tv-token.ts` — текущая реализация (HIGH confidence, прямой анализ кода)
+- `.planning/PROJECT.md` — описание проблемы и context от коллеги (HIGH confidence)
+- MDN Web Docs — Promise chaining patterns, setTimeout async (HIGH confidence, training data)
+- Node.js docs — execSync блокирует event loop (HIGH confidence, training data)
+- W3C/WHATWG — event loop model, macrotask queue (HIGH confidence, training data)

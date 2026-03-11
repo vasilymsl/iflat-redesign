@@ -1,192 +1,160 @@
 # Project Research Summary
 
-**Project:** iFlat TV Shelves — HLS Preview on Hover
-**Domain:** TV/Streaming content shelves with live HLS video preview (Netflix/24h.tv style)
-**Researched:** 2026-03-09
+**Project:** iFlat TV — Rate-Limit Fix (Milestone v1.1)
+**Domain:** API client resilience — rate-limited third-party streaming API (24h.tv / QRATOR)
+**Researched:** 2026-03-12
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This is a brownfield enhancement to an existing Next.js 16 / React 19 site: replacing placeholder TV channel shelves with production-quality, Netflix-style content rows featuring 140% card expansion on hover, real-time HLS video preview, and live data from the 24h.tv API. The foundation is already built — components exist, hls.js is installed, CSS structure is present — but the current implementation is a placeholder: cards only scale 5% on hover, only one channel has a real stream URL, all data is hardcoded, and the overflow structure on the scroll container guarantees the expand effect will be clipped until fixed. The gap between current and target is implementation depth, not architecture invention.
+Это brownfield-фикс, а не новая фича. Существующий `src/lib/tv-token.ts` (756 строк) уже содержит корректную основу: curl через execSync, retry с exponential backoff, circuit breaker, persistent file cache, proactive token refresh. Проблема не в отсутствии механизмов защиты, а в конкретных дырах реализации: `execSync('sleep')` блокирует Node.js event loop, race condition на `lastRequestAt` позволяет параллельным запросам обойти rate-limiting, а retry политика одинаковая для интерактивных stream-запросов (hover UX) и пакетных schedule-запросов (SSR).
 
-The recommended approach follows three parallel tracks that converge: (1) fix the CSS overflow/expand architecture first since every visual milestone depends on it, (2) build the API layer (guest token + channel data + stream URL proxy) in parallel since it has no CSS dependencies, and (3) wire both together in ChannelCard with proper HLS lifecycle management. No new packages are needed — the entire feature builds from the installed stack. The critical architectural decision is to implement card expansion via `position: absolute` overlay (not layout-changing width/scale), which avoids the scroll-snap conflict and overflow-clipping trap simultaneously.
+Рекомендованный подход — минимальные хирургические изменения в одном файле без новых зависимостей. Три ключевых изменения: (1) заменить `execSync('sleep')` на `await sleep()` в async контексте, (2) добавить Promise-chain mutex для сериализации всех curl-запросов, (3) добавить раздельные счётчики `consecutiveFailCount` / `totalFailCount` в circuit breaker. Дополнительно: отдельная retry политика для stream API (MAX_RETRIES=1, быстрый fail), фиксация статичного fallback для каналов, сохранение `tokenIssuedAt` в persistent cache.
 
-The primary risks are: (1) CORS blocking HLS manifest/segment fetching from 24h.tv CDN — must be validated before any player code is written; (2) the overflow-clipping trap where `overflow: hidden` on the scroll container silently breaks the entire expand effect; (3) hls.js memory leaks from fast hover/unhover without proper AbortController guards. All three risks have documented mitigations and the existing code already partially addresses #3. The main gap is that CORS behavior of 24h.tv CDN is unknown until tested.
-
----
+Главный риск — retry storm: при intermittent QRATOR блокировке 15 каналов × 3 попытки × 14 секунд = возможное зависание SSR на 90+ секунд. Это решается двойным circuit breaker (consecutive + total) и абсолютным timeout на весь batch. Второй риск — execSync блокирует весь Node.js при одновременных hover-запросах; полное решение через spawn() с Promise wrapper является желательным для v1.1 и обязательным при росте трафика.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack requires zero new packages. All dependencies are present: `hls.js@1.6.15` for HLS streaming, Next.js Route Handlers for server-side API proxy (hiding auth tokens), plain CSS transitions for GPU-composited expand animations (not Framer Motion), and native `overflow-x: auto` + scroll logic already in `TvChannelShelf`. The key constraint is that hls.js must remain a dynamic import — static import causes `document is not defined` during Next.js SSR. Framer Motion and Embla Carousel are installed but must NOT be used for this feature: CSS transforms are GPU-composited at zero JS cost, and native scroll handles mobile correctly.
+Нулевые новые зависимости. Все паттерны реализуются через Node.js built-ins: Promise chaining для mutex, `setTimeout` для async sleep, `spawn` для non-blocking curl. Добавление npm-пакетов типа `bottleneck`, `p-limit`, `p-queue` — over-engineering для одного API-клиента с одним процессом.
 
 **Core technologies:**
-- `hls.js@1.6.15`: MSE-based HLS streaming for Chrome/Firefox — already installed, already used in ChannelCard
-- Native `<video>` + `canPlayType`: Safari native HLS fallback — already implemented in ChannelCard
-- Next.js Route Handlers: server-side proxy to hide 24h.tv `access_token` from browser — mandatory, no CORS leakage
-- CSS `transform` + `position: absolute`: 140% card expand — GPU-composited, zero JS overhead
-- `fetch` with `next: { revalidate: 3600 }`: channel list caching — avoids 24h.tv rate limiting
-- Module-level token cache with promise deduplication: prevents race conditions on concurrent hover events
+- `Promise chain mutex` (built-in) — сериализация curl-запросов, устранение race condition на `lastRequestAt`
+- `async sleep` через `setTimeout` (built-in) — замена блокирующего `execSync('sleep')`, освобождает event loop
+- `child_process.spawn` (built-in) — non-blocking curl для stream-запросов (желательно Phase 4)
+- Именованные константы для delay/retry — `CIRCUIT_BREAKER_THRESHOLD`, `SCHEDULE_DELAY_MS` вместо hardcoded значений
 
 **What NOT to use:**
-- Framer Motion for hover animations (JS-driven, expensive for 6+ cards)
-- Embla Carousel (native scroll is simpler and conflicts with hover expansion)
-- SWR/React Query (not installed, not justified for 2 endpoints)
-- Zustand/Jotai (card state is local, no cross-card coordination needed)
+- `bottleneck`, `p-limit`, `p-queue` — npm-пакеты для задачи решаемой 8 строками JS
+- Node.js `fetch` вместо curl — curl используется специально для обхода QRATOR TLS fingerprinting (JA3)
+- `Promise.all` для schedule batch — 15 параллельных запросов триггерят rate-limit
 
 ### Expected Features
 
-**Must have (table stakes — blocks milestone):**
-- True 140% card expand with neighbor overlap — the #1 gap; current `scale(1.05)` is visually amateurish
-- Real HLS streams from 24h.tv API via guest token flow — currently only 1 of ~15 channels has a stream
-- TV shelves on home page (`app/page.tsx`) — currently shelves only exist on `/tv`
-- Animated expand with 200ms hover intent delay — partial (JS delay exists, CSS transition needs alignment)
+**Must have (минимальный фикс — блокирует milestone):**
+- Guaranteed inter-request spacing через Promise mutex — убирает race condition на `lastRequestAt`
+- Убрать `execSync('sleep')` из `curlJsonSync` — async sleep только в `curlJson` (async контекст)
+- Двойной circuit breaker (`consecutiveFailCount` + `totalFailCount`) — защита от retry storm
+- Статичный fallback каналов — если API вернул пустой массив, использовать `STATIC_CHANNELS` из `tv-shelves.ts`
 
-**Should have (milestone quality):**
-- Dynamic channel data from 24h.tv API (not hardcoded `tv-shelves.ts`)
-- Dynamic "Novinki" content from API
-- Rating badge always visible on content cards (currently hidden until hover — simple CSS fix)
-- Video crossfade from thumbnail to live stream (opacity transition exists but timing needs tuning)
+**Should have (надёжность):**
+- Stream URL cache (60s TTL) — предотвращает повторные запросы при быстром hover/unhover
+- `SCHEDULE_DELAY_MS = 500ms` отдельная константа — 350ms может быть слишком агрессивно
+- `tokenIssuedAt` в persistent cache — proactive refresh не работает после рестарта без этого
+- Отдельная retry политика для stream requests (MAX_RETRIES=1, быстрый fail для UX)
+- Абсолютный timeout на весь `fetchCurrentPrograms` batch (8 секунд)
 
-**Defer:**
-- Preload strategy for adjacent cards (out of scope per PROJECT.md)
-- CORS stream proxy (only needed if CDN blocks direct browser requests — validate first)
-- Server-side token caching with Redis/KV (module-level cache is sufficient for this scale)
-- Keyboard navigation beyond basic arrow button support
-
-**Anti-features (deliberately out of scope):**
-- Full video player controls — preview only, no seek/fullscreen
-- User auth / 24h.tv login — guest token only
-- Mobile video on hover — touch events differ, tap should navigate to 24h.tv
-- Multiple simultaneous streams — one active stream at a time, new hover cancels previous
+**Defer (v1.2+):**
+- `spawn()` вместо `execSync` — полное решение event loop блокировки, значительный рефакторинг
+- Adaptive delay backoff — только если 500ms fixed delay недостаточно
+- Health check endpoint `/api/tv/health` — debug tool
+- Concurrency limit N=2 для schedule — только если sequential слишком медленно в production
 
 ### Architecture Approach
 
-The architecture is a clear RSC-to-client boundary: Server Components fetch channel list at request time (with ISR cache), pass serializable `ChannelData[]` props to client shelf components, and stream URLs are fetched lazily via Next.js Route Handler on first hover (token never reaches browser). State is strictly local per card — no global store. The scroll container switches from native scroll-snap to JS-only scroll to enable `overflow: visible` for card expansion. hls.js lifecycle is a state machine (IDLE → PENDING → LOADING → BUFFERING → PLAYING → CLEANUP) with AbortController guards at every async boundary.
+Трёхслойная защита rate-limiting уже архитектурно правильная: Layer 1 (`curlJson` — inter-request spacing), Layer 2 (auth steps — `DELAY_AUTH_STEP_MS`), Layer 3 (`fetchCurrentPrograms` — circuit breaker). Проблема не в архитектуре слоёв, а в реализации Layer 1: async sleep без mutex не создаёт взаимоисключение, а `execSync('sleep')` — блокирующий паразит. Все исправления локальные — только `src/lib/tv-token.ts`.
 
 **Major components:**
-1. `lib/api/tv.ts` — network layer: guest token management, channel list fetch, stream URL fetch; no React dependencies
-2. `app/api/tv/stream/[id]/route.ts` — server proxy: adds Bearer token to 24h.tv requests, keeps token off client
-3. `ChannelCard` (client) — single card: thumbnail + absolute-positioned hover overlay, HLS lifecycle state machine
-4. `TvChannelShelf` (client) — scroll container with JS-only scroll (after removing scroll-snap), prev/next arrows
-5. `ContentShelf` (client) — same scroll pattern for movie/series poster cards
-6. `app/tv/page.tsx` + `app/page.tsx` — Server Components that fetch data and pass props to shelves
-
-**Critical path:** `lib/api/tv.ts` → CSS expand architecture → `ChannelCard` with lazy stream fetch → data wiring → main page integration
+1. `curlJsonSync()` — sync curl через execSync; sleep убирается (паузы только в async curlJson через mutex)
+2. `curlJson()` + `requestQueue` mutex — единственная точка rate-limiting для всех API-вызовов
+3. `fetchCurrentPrograms()` — sequential loop с двойным circuit breaker (consecutive + total fail counts) + абсолютный timeout
+4. `getStreamUrl()` — отдельная retry политика (MAX_RETRIES=1, быстрый fail для интерактивного UX)
+5. Persistent cache (`PersistentTokenData`) — добавить `tokenIssuedAt` для восстановления proactive refresh после рестарта
 
 ### Critical Pitfalls
 
-1. **`overflow: hidden` clips expanded cards** — `.tv-shelf__scroll` and `.channel-card-inner` both have `overflow: hidden`. Card expansion is completely invisible until this is fixed. Solution: `overflow-x: auto; overflow-y: visible` on scroll container, switch to absolute-positioned hover overlay on card.
+1. **Race condition на `lastRequestAt`** — два async вызова `curlJson` читают `lastRequestAt` до того как первый его обновил. Оба проходят проверку `elapsed < DELAY` и уходят почти одновременно. Решение: Promise-chain mutex (`requestQueue`), не elapsed-time check.
 
-2. **CORS blocking HLS manifests and TS segments** — 24h.tv CDN may not set `Access-Control-Allow-Origin`. Must validate in browser DevTools before writing any player code. If blocked, need `/api/stream?url=...` proxy route (adds ~50-100ms but acceptable for hover-triggered load).
+2. **Retry storm при intermittent блокировке** — если QRATOR пропускает каждый второй запрос, `consecutiveFailCount` сбрасывается на успехах. Все 15 каналов получают полный backoff (2s + 4s + 8s = 14s каждый). 15 × 14s = 210 секунд максимум. Решение: `totalFailCount >= 5` как второй триггер + абсолютный timeout.
 
-3. **hls.js memory leak on fast hover/unhover** — dynamic import is async; if user leaves before promise resolves, the created `Hls()` instance is never destroyed. Fix: check `ac.signal.aborted` immediately after `await import("hls.js")`, destroy instance if aborted before assigning to ref.
+3. **`execSync` блокирует event loop** — `execSync('sleep 0.35')` в `curlJsonSync` замораживает весь Node.js thread. При 15 schedule-запросах = 5.25s суммарной блокировки. При параллельных hover-запросах — весь сайт freezes. Решение: убрать sleep из `curlJsonSync`, async sleep только в `curlJson` через mutex.
 
-4. **scroll-snap conflicts with card expansion** — `scroll-snap-type: x mandatory` triggers snap on layout changes caused by card expansion. Solution: implement expansion as `position: absolute` overlay (no layout change = no snap trigger). Remove scroll-snap from container when switching to JS scroll.
+4. **Stream requests с 14-секундным backoff** — пользователь убрал курсор, сервер ждёт 14 секунд прежде чем вернуть ошибку. Решение: `MAX_RETRIES_STREAM = 1` или AbortSignal timeout 3s для stream API route.
 
-5. **Guest token race condition** — concurrent hovers trigger parallel `POST /v2/users` requests; each returns a new token, invalidating previous. Solution: singleton promise deduplication pattern — store pending token promise, new requests join the same promise rather than creating new ones.
-
----
+5. **Proactive refresh нефункционален после рестарта** — `tokenIssuedAt` не сохраняется в `.tv-token-cache.json`. После загрузки из файла `tokenIssuedAt = 0`, `totalTtl` огромный, условие `remaining < totalTtl * 0.25` никогда не срабатывает до самого истечения токена. Решение: добавить `tokenIssuedAt` в `PersistentTokenData`.
 
 ## Implications for Roadmap
 
-### Phase 1: CSS Expand Architecture
-**Rationale:** Every subsequent phase depends on the expand effect being visually correct. Fixing the overflow/stacking structure first means ChannelCard work, API integration work, and home page integration can all be validated visually from day one. This phase has zero external dependencies.
-**Delivers:** 140% card expansion with neighbor overlap, hover delay animation, correct z-index stacking (no clips, no conflicts with header), scroll-snap removed (JS scroll retained)
-**Addresses:** Table stakes #1 (140% expand), Table stakes #2 (animated delay)
-**Avoids:** Pitfall 1 (overflow clipping), Pitfall 4 (scroll-snap conflict), Pitfall 9 (z-index behind header)
-**Stack:** Pure CSS changes to `globals.css`, position: absolute hover overlay on `.channel-card-inner`
+Исследование показывает компактный scope с чёткой приоритизацией. Три обязательные фазы плюс одна опциональная. Все изменения в одном файле `src/lib/tv-token.ts`.
 
-### Phase 2: API Layer + Stream Proxy
-**Rationale:** Can be built in parallel with Phase 1 (no CSS dependencies). Must be complete before ChannelCard can show real streams. The CORS validation step must happen first within this phase — if CORS is blocked, a proxy route is needed which adds scope.
-**Delivers:** `lib/api/tv.ts` with guest token (singleton + deduplication), `getChannels()`, `getNewReleases()`, `getChannelStream(id)`; Route Handler proxy at `/api/tv/stream/[id]`; ISR-cached channel list fetch
-**Addresses:** "Real HLS streams" requirement, "Dynamic channel data" requirement
-**Avoids:** Pitfall 3 (CORS), Pitfall 5 (token race), Pitfall 7 (SSR import), Pitfall 8 (rate limiting)
-**Stack:** Next.js Route Handlers, `fetch` with `next: { revalidate: 3600 }`, module-level token cache
+### Phase 1: Core Rate-Limit Fix
+**Rationale:** Устраняет root cause — race condition и blocking sleep. Без этого остальные улучшения не имеют смысла и могут маскировать проблему.
+**Delivers:** Promise mutex (`requestQueue`) в `curlJson`, убирается `execSync('sleep')` из `curlJsonSync`, `SCHEDULE_DELAY_MS = 500ms` как отдельная константа
+**Addresses:** Must-have (guaranteed inter-request spacing, mutex)
+**Avoids:** Pitfall 1 (race condition на `lastRequestAt`), Pitfall 3 (event loop blocking)
 
-### Phase 3: ChannelCard HLS Integration
-**Rationale:** Depends on Phase 1 (CSS overlay structure) and Phase 2 (stream URL source). This is where the expand animation and live video preview merge into the final UX. AbortController hygiene and cleanup correctness are critical here.
-**Delivers:** Working hover-triggered HLS preview on all channels, thumbnail-to-video crossfade, LIVE badge, stopStream on mouse leave, full AbortController guard at every async boundary, cleanup on unmount
-**Addresses:** "Live video preview on hover" (table stakes #3), video crossfade differentiator
-**Avoids:** Pitfall 2 (memory leak), Pitfall 11 (AbortError unhandled), Known issue #4 (unmount cleanup)
-**Stack:** hls.js dynamic import, AbortController, `useRef` + `useState` local state machine
+### Phase 2: Circuit Breaker Hardening
+**Rationale:** Защищает от worst-case scenario (retry storm при intermittent блокировке). Зависит от Phase 1 mutex для корректного поведения.
+**Delivers:** Двойной счётчик (`consecutiveFailCount` + `totalFailCount`), именованная константа `CIRCUIT_BREAKER_THRESHOLD = 3`, лог при срабатывании, абсолютный timeout 8s на весь batch
+**Addresses:** Must-have (circuit breaker verification), Should-have (totalFailCount)
+**Avoids:** Pitfall 2 (retry storm)
 
-### Phase 4: Data Wiring + Home Page Integration
-**Rationale:** After Phase 3 proves the end-to-end happy path on `/tv`, replace static config with live API data and replicate shelves on the home page. Low risk — component reuse, no new patterns.
-**Delivers:** `app/tv/page.tsx` fetches live channels + new releases from API; `app/page.tsx` replicates the tv-section; static `tv-shelves.ts` retained as fallback
-**Addresses:** "Shelves on home page" (table stakes, blocks milestone), "Dynamic data" should-haves
-**Avoids:** Pitfall 8 (rate limiting via revalidate), Pitfall 9 (z-index on home page placement)
-**Stack:** RSC data fetching, `lib/api/tv.ts`, existing TvChannelShelf + ContentShelf components
+### Phase 3: Stream UX + Token Resilience
+**Rationale:** Улучшение интерактивного UX и надёжности после рестартов. Независимо от Phase 1/2 по коду, но логично после основного фикса как validation.
+**Delivers:** `MAX_RETRIES_STREAM = 1` для `getStreamUrl`, stream URL cache 60s TTL, `tokenIssuedAt` в persistent cache, статичный fallback каналов из `tv-shelves.ts`
+**Addresses:** Should-have (stream cache, fast fail, tokenIssuedAt, static fallback)
+**Avoids:** Pitfall 5 (stream timeout UX), Pitfall 3 (proactive refresh после рестарта)
 
-### Phase 5: Polish + Mobile
-**Rationale:** Cleanup pass after functional milestone is achieved. Address minor pitfalls, fix known code issues, Lighthouse pass.
-**Delivers:** Rating badge always visible, resize debounce on TvChannelShelf, scroll padding-right for last-card snap, `crossOrigin="anonymous"` on video for Safari, `loading="lazy"` + `priority` on first 6 images, video crossfade timing tuned
-**Addresses:** Content card rating UX, responsive edge cases
-**Avoids:** Pitfall 10 (Safari crossOrigin), Pitfall 12 (last card scroll), Pitfall 13 (image lazy loading), Known issue #5 (resize debounce)
+### Phase 4: Event Loop Cleanup (optional)
+**Rationale:** Полное решение execSync блокировки — замена на `spawn()` с Promise wrapper. Значительный рефакторинг, нужен только если Phase 1-3 недостаточны при росте параллельных hover-запросов.
+**Delivers:** `curlJsonAsync` через `child_process.spawn`, non-blocking curl для всех API-вызовов
+**Uses:** Node.js `child_process.spawn` (no new deps)
+**Avoids:** Pitfall 5 (execSync blocking under concurrent stream requests)
 
 ### Phase Ordering Rationale
 
-- CSS must precede ChannelCard because visual validation of the expand effect requires the overflow structure to be correct — otherwise every iteration of ChannelCard looks broken
-- API layer is independent of CSS and can be built in parallel; decoupling these phases keeps each focused
-- ChannelCard integration comes after both CSS and API are independently validated — reduces debugging surface
-- Home page integration is last because it's a composition step, not a new pattern; reusing already-validated components
-- Polish phase is always last to avoid premature optimization of things that may change
+- Phase 1 первая: Promise mutex — фундамент, без него rate-limiting ненадёжен независимо от других улучшений
+- Phase 2 после Phase 1: circuit breaker с двойным счётчиком работает корректно только при сериализованных запросах
+- Phase 3 независима от Phase 1/2 по коду, но логически следует после — validation что core fix работает
+- Phase 4 опциональная: значительный рефакторинг, откладывается до подтверждения необходимости при реальном трафике
+- Все изменения в одном файле минимизируют риск regression в других компонентах
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 2 (API Layer):** CORS behavior of 24h.tv CDN is unknown — must test empirically before finalizing proxy vs. direct approach. Guest token TTL is estimated (likely 1h) but not confirmed. `/v2/rows/novinki` endpoint existence is unconfirmed — may need alternate endpoint discovery.
-- **Phase 3 (ChannelCard):** hls.js `Hls.Events.ERROR` handling strategy for production (network errors, stale tokens, unsupported format) needs decision — currently only happy path is implemented.
+Фазы с хорошо известными паттернами (дополнительный research не нужен):
+- **Phase 1:** Promise chain mutex — стандартный JavaScript паттерн, хорошо документирован в MDN
+- **Phase 2:** Circuit breaker с dual counter — established pattern (Netflix Hystrix / resilience4j)
+- **Phase 3:** Stream TTL cache и persistent cache — тривиальная реализация
 
-Phases with standard patterns (research not needed):
-- **Phase 1 (CSS):** Well-documented CSS overflow/stacking context behavior. Solutions are established.
-- **Phase 4 (Data Wiring):** Standard RSC data fetching pattern with Next.js. No unknowns.
-- **Phase 5 (Polish):** All items are known fixes to known issues from code inspection.
-
----
+Фазы, требующие проверки при реализации:
+- **Phase 1:** Точные значения задержек (350 → 500ms) — нет официальной документации rate-limit 24h.tv API. Начать с 500ms, скорректировать по наблюдениям за логами.
+- **Phase 4:** Поведение `spawn()` при QRATOR — нужно подтверждение что spawn не меняет TLS fingerprint по сравнению с execSync curl.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Based on direct `package.json` audit and existing component code — no guesswork |
-| Features | HIGH | Based on direct codebase analysis + PROJECT.md requirements; only API endpoint details are MEDIUM |
-| Architecture | HIGH | Existing component structure read directly; target architecture follows established Next.js RSC patterns |
-| Pitfalls | HIGH | Critical pitfalls from direct code inspection of actual bugs (overflow, scale, single streamUrl); domain knowledge for HLS/CORS/stacking context is well-established |
+| Stack | HIGH | Прямой анализ кода + Node.js documented behaviour (execSync blocks event loop) |
+| Features | HIGH | Анализ tv-token.ts + PROJECT.md, конкретные проблемы идентифицированы в коде |
+| Architecture | HIGH | Полный read tv-token.ts (756 строк), все компоненты описаны конкретно |
+| Pitfalls | HIGH | Node.js event loop behaviour well-established, все pitfalls найдены в реальном коде |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **24h.tv CDN CORS policy:** Unknown until tested in browser. Handle by making CORS validation the first step of Phase 2. If blocked, proxy route is pre-designed in ARCHITECTURE.md.
-- **Guest token TTL:** Estimated as ~1h based on standard practices, but not confirmed. Token cache TTL of 55 min is conservative — adjust if 401s appear in testing.
-- **`/v2/rows/novinki` endpoint:** Existence inferred from PROJECT.md, not verified against live API. Have static fallback ready (`tv-shelves.ts`) so failure here doesn't block milestone.
-- **Safari HLS CORS:** `crossOrigin="anonymous"` may conflict with token-in-URL scheme (some CDNs reject credentialed requests if CORS is anonymous). Test Safari specifically.
-- **transform-origin for first/last card:** Architecture recommends CSS `:first-child`/`:last-child` selectors for directional expansion. This may need JS `data-` attribute approach if card count varies dynamically.
-
----
+- **Точные значения rate-limit задержек** — нет официальной документации 24h.tv API. 350ms → 500ms — educated guess. Нужна эмпирическая проверка: мониторить логи на ошибки после деплоя Phase 1.
+- **QRATOR поведение при IP блокировке** — неизвестно сколько длится блокировка и при каком количестве запросов триггерится. Если блокировка IP-уровня, code-fix не поможет (только manual token injection из браузера — задокументировано в MEMORY.md).
+- **Proactive refresh после рестарта** — после добавления `tokenIssuedAt` в persistent cache нужна проверка: рестартнуть сервер и убедиться что в логах появляется `[tv-token] Proactive token refresh` через ~67 минут после получения токена.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `/iflat-redesign/src/components/sections/ChannelCard.tsx` — existing HLS implementation, state machine, AbortController usage
-- `/iflat-redesign/src/components/sections/TvChannelShelf.tsx` — scroll logic, arrow visibility, resize handler
-- `/iflat-redesign/src/components/sections/ContentShelf.tsx` — content card structure
-- `/iflat-redesign/src/app/globals.css` — 350+ lines TV shelf CSS, current overflow structure, animation patterns
-- `/iflat-redesign/src/config/tv-shelves.ts` — static data structure, ChannelData/ContentItem types
-- `/iflat-redesign/package.json` — installed versions (all confirmed present)
-- `.planning/PROJECT.md` — requirements, API spec, constraints, out-of-scope decisions
+- `src/lib/tv-token.ts` (756 строк) — полная инспекция кода, все находки прямые
+- `src/app/api/tv/stream/[id]/route.ts` (41 строка) — полная инспекция
+- `.planning/PROJECT.md` — цели milestone v1.1, out-of-scope ограничения
+- Node.js docs — `execSync` блокирует event loop (well-established, training data)
 
 ### Secondary (MEDIUM confidence)
-- MDN Web Docs (training data) — CSS overflow stacking context, W3C overflow-x:auto implies overflow-y:auto
-- hls.js GitHub README (training data) — maxBufferLength config, Hls.isSupported() API
-- Netflix/Kinopoisk/24h.tv UX patterns (domain expertise) — 140% expand convention, one-stream-at-a-time rule, hover delay convention
+- Domain expertise — Promise concurrency patterns, circuit breaker design
+- MDN Web Docs — Promise chaining, event loop macrotask queue
+- Netflix Hystrix / resilience4j patterns — dual failure counter circuit breaker
 
-### Tertiary (LOW confidence — needs runtime validation)
-- 24h.tv API endpoint behavior: CORS headers, guest token TTL, `/v2/rows/novinki` existence
-- Safari + crossOrigin + token-in-URL compatibility
+### Tertiary (inference — нужна валидация)
+- Точные delay-значения (350/500ms) — нет официальной документации 24h.tv rate-limit
+- Продолжительность QRATOR IP-блокировки — неизвестна, только empirical observation
 
 ---
-*Research completed: 2026-03-09*
+*Research completed: 2026-03-12*
 *Ready for roadmap: yes*
