@@ -129,10 +129,10 @@ Plans:
   1. После 3 последовательных ошибок расписаний circuit breaker срабатывает — в логах видно сообщение об остановке batch
   2. При наведении на карточку канала и недоступности stream API ответ приходит не позднее чем через 3-4 секунды (не 14)
   3. Если API каналов вернул пустой массив, шлейфы показывают статические каналы из tv-shelves.ts — страница не пустая
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 07-01: Двойной circuit breaker (consecutiveFailCount + totalFailCount), MAX_RETRIES_STREAM=1, static fallback каналов
+- [ ] 07-01-PLAN.md — Circuit breaker state + curlJsonStream fast-fail + static fallback каналов
 
 ### Phase 8: Token & Stream Hardening
 **Goal**: Токен проактивно обновляется до истечения даже после рестарта сервера, повторный hover не бьёт API
@@ -142,7 +142,7 @@ Plans:
   1. После рестарта сервера через ~67 минут в логах появляется `[tv-token] Proactive token refresh` — не ждёт истечения токена
   2. Повторное наведение на ту же карточку в течение 60 секунд не создаёт нового запроса к `/api/tv/stream/[id]`
   3. `.tv-token-cache.json` содержит поле `tokenIssuedAt` — видно в файле после перезапуска
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [ ] 08-01: tokenIssuedAt в persistent cache, stream URL cache 60s TTL
