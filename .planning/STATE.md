@@ -3,15 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: QRATOR Stability Fix
 status: planning
-stopped_at: null
-last_updated: "2026-03-12"
-last_activity: 2026-03-12 — Roadmap v1.1 создан, фазы 6–8 определены
+stopped_at: Completed 06-core-rate-limit-fix-01-PLAN.md
+last_updated: "2026-03-11T23:01:08.640Z"
+last_activity: 2026-03-12 — Roadmap v1.1 создан, все 10 требований распределены по фазам 6–8
 progress:
-  total_phases: 3
-  completed_phases: 0
-  total_plans: 3
-  completed_plans: 0
-  percent: 0
+  total_phases: 8
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 3
 ---
 
 # Project State
@@ -47,6 +46,7 @@ Progress (v1.1): [░░░░░░░░░░] 0% (0/3 фаз v1.1 завер
 | 8. Token & Stream Hardening | TBD | - | - |
 
 *Updated after each plan completion*
+| Phase 06-core-rate-limit-fix P01 | 2 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -57,6 +57,8 @@ Progress (v1.1): [░░░░░░░░░░] 0% (0/3 фаз v1.1 завер
 - [v1.1]: Promise mutex вместо elapsed-time check — единственный способ гарантировать serialization запросов
 - [v1.1]: MAX_RETRIES_STREAM=1 для stream API — интерактивный UX требует быстрый fail, не 14s backoff
 - [v1.1]: Все изменения только в src/lib/tv-token.ts — нулевые новые зависимости
+- [Phase 06-core-rate-limit-fix]: Promise-chain mutex (requestQueue) вместо elapsed-time check (lastRequestAt) — единственный надёжный способ сериализации запросов
+- [Phase 06-core-rate-limit-fix]: execSync('sleep') удалён из curlJsonSync — event loop не блокируется, replaced с await sleep() в curlJson
 
 ### Pending Todos
 
@@ -69,6 +71,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-12
-Stopped at: Roadmap v1.1 создан (фазы 6–8), REQUIREMENTS.md traceability обновлён
+Last session: 2026-03-11T23:01:08.638Z
+Stopped at: Completed 06-core-rate-limit-fix-01-PLAN.md
 Resume file: None

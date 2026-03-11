@@ -7,9 +7,9 @@
 
 ### Rate-Limiting
 
-- [ ] **RATE-01**: Запросы расписаний каналов идут последовательно с гарантированной паузой ≥350ms между ними
-- [ ] **RATE-02**: Race condition на `lastRequestAt` устранён — параллельные вызовы не обходят задержку (Promise-chain mutex)
-- [ ] **RATE-03**: Auth-flow (4 шага) выполняется с паузами ≥500ms между шагами
+- [x] **RATE-01**: Запросы расписаний каналов идут последовательно с гарантированной паузой ≥350ms между ними
+- [x] **RATE-02**: Race condition на `lastRequestAt` устранён — параллельные вызовы не обходят задержку (Promise-chain mutex)
+- [x] **RATE-03**: Auth-flow (4 шага) выполняется с паузами ≥500ms между шагами
 
 ### Resilience
 
@@ -24,7 +24,7 @@
 
 ### Performance
 
-- [ ] **PERF-01**: `execSync('sleep')` заменён на async sleep — event loop не блокируется
+- [x] **PERF-01**: `execSync('sleep')` заменён на async sleep — event loop не блокируется
 - [ ] **PERF-02**: Stream URL кешируется на 60s — повторный hover не бьёт API
 
 ## Future Requirements
@@ -47,10 +47,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RATE-01 | Phase 6 | Pending |
-| RATE-02 | Phase 6 | Pending |
-| RATE-03 | Phase 6 | Pending |
-| PERF-01 | Phase 6 | Pending |
+| RATE-01 | Phase 6 | Complete |
+| RATE-02 | Phase 6 | Complete |
+| RATE-03 | Phase 6 | Complete |
+| PERF-01 | Phase 6 | Complete |
 | RESIL-01 | Phase 7 | Pending |
 | RESIL-02 | Phase 7 | Pending |
 | RESIL-03 | Phase 7 | Pending |
