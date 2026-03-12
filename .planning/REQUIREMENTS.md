@@ -19,13 +19,13 @@
 
 ### Token
 
-- [ ] **TOKEN-01**: Проактивное обновление токена при <25% оставшегося TTL
-- [ ] **TOKEN-02**: `tokenIssuedAt` сохраняется в persistent cache для корректного расчёта TTL после рестарта
+- [x] **TOKEN-01**: Проактивное обновление токена при <25% оставшегося TTL
+- [x] **TOKEN-02**: `tokenIssuedAt` сохраняется в persistent cache для корректного расчёта TTL после рестарта
 
 ### Performance
 
 - [x] **PERF-01**: `execSync('sleep')` заменён на async sleep — event loop не блокируется
-- [ ] **PERF-02**: Stream URL кешируется на 60s — повторный hover не бьёт API
+- [x] **PERF-02**: Stream URL кешируется на 60s — повторный hover не бьёт API
 
 ## Future Requirements
 
@@ -54,9 +54,9 @@
 | RESIL-01 | Phase 7 | Complete |
 | RESIL-02 | Phase 7 | Complete |
 | RESIL-03 | Phase 7 | Complete |
-| TOKEN-01 | Phase 8 | Pending |
-| TOKEN-02 | Phase 8 | Pending |
-| PERF-02 | Phase 8 | Pending |
+| TOKEN-01 | Phase 8 | Complete |
+| TOKEN-02 | Phase 8 | Complete |
+| PERF-02 | Phase 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 10 total

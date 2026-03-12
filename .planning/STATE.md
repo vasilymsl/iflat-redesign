@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: QRATOR Stability Fix
 status: planning
-stopped_at: Completed 07-circuit-breaker-resilience-01-PLAN.md
-last_updated: "2026-03-11T23:23:38.373Z"
+stopped_at: Completed 08-token-stream-hardening-01-PLAN.md
+last_updated: "2026-03-12T08:48:39.548Z"
 last_activity: 2026-03-12 — Roadmap v1.1 создан, все 10 требований распределены по фазам 6–8
 progress:
   total_phases: 8
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 4
+  completed_phases: 5
+  total_plans: 9
+  completed_plans: 5
 ---
 
 # Project State
@@ -48,6 +48,7 @@ Progress (v1.1): [░░░░░░░░░░] 0% (0/3 фаз v1.1 завер
 *Updated after each plan completion*
 | Phase 06-core-rate-limit-fix P01 | 2 | 2 tasks | 1 files |
 | Phase 07-circuit-breaker-resilience P01 | 12 | 2 tasks | 1 files |
+| Phase 08-token-stream-hardening P01 | 10 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,8 @@ Progress (v1.1): [░░░░░░░░░░] 0% (0/3 фаз v1.1 завер
 - [Phase 07-circuit-breaker-resilience]: Circuit breaker state in globalThis.__tvScheduleCB — survives Next.js hot-reload like other TV caches
 - [Phase 07-circuit-breaker-resilience]: curlJsonStream is synchronous (execSync) — fast-fail for interactive hover, spawn() migration is Future Requirement
 - [Phase 07-circuit-breaker-resilience]: Static freeChannels fallback in getChannels — graceful degradation when API returns empty array
+- [Phase 08-token-stream-hardening]: tokenIssuedAt сохраняется в PersistentTokenData — proactive refresh TTL ratio корректен после рестарта
+- [Phase 08-token-stream-hardening]: streamUrlCache хранится в globalThis.__tvTokenCache.streamUrlCache (Map) — переживает hot-reload, 60s TTL
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-11T23:20:34.383Z
-Stopped at: Completed 07-circuit-breaker-resilience-01-PLAN.md
+Last session: 2026-03-12T08:48:39.546Z
+Stopped at: Completed 08-token-stream-hardening-01-PLAN.md
 Resume file: None

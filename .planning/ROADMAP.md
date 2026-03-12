@@ -103,7 +103,7 @@ Plans:
 
 - [x] **Phase 6: Core Rate-Limit Fix** - Promise mutex + async sleep устраняют race condition и блокировку event loop (completed 2026-03-11)
 - [x] **Phase 7: Circuit Breaker + Resilience** - Двойной circuit breaker защищает от retry storm, fallback при недоступности API (completed 2026-03-11)
-- [ ] **Phase 8: Token & Stream Hardening** - Проактивный refresh токена и кеш stream URL устраняют повторные запросы
+- [x] **Phase 8: Token & Stream Hardening** - Проактивный refresh токена и кеш stream URL устраняют повторные запросы (completed 2026-03-12)
 
 ## Phase Details
 
@@ -162,4 +162,4 @@ v1.1: 6 -> 7 -> 8
 | 5. Visual Polish | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 6. Core Rate-Limit Fix | 1/1 | Complete   | 2026-03-11 | - |
 | 7. Circuit Breaker + Resilience | 1/1 | Complete   | 2026-03-11 | - |
-| 8. Token & Stream Hardening | v1.1 | 0/1 | Not started | - |
+| 8. Token & Stream Hardening | 1/1 | Complete   | 2026-03-12 | - |
