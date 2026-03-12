@@ -150,6 +150,7 @@ const NETWORK_CACHE_TTL = 30 * 60 * 1000;
  * Async HTTP JSON request. Использует fetch, при ошибке на localhost — fallback на curl.
  */
 async function apiJson(method: string, url: string, body?: unknown): Promise<unknown> {
+  console.log(`[tv-api] ${method} ${url.replace(/access_token=[^&]+/, 'access_token=***')}`);
   try {
     const resp = await fetch(url, {
       method,
@@ -161,8 +162,10 @@ async function apiJson(method: string, url: string, body?: unknown): Promise<unk
       signal: AbortSignal.timeout(15_000),
     });
     const text = await resp.text();
+    console.log(`[tv-api] Response ${resp.status}: ${text.slice(0, 200)}`);
     return JSON.parse(text);
   } catch (fetchErr) {
+    console.error(`[tv-api] Fetch failed for ${method} ${url}:`, fetchErr);
     // Fallback на curl для локальной разработки (QRATOR блокирует fetch)
     if (process.env.VERCEL) throw fetchErr;
 
