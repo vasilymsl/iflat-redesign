@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0d47a1"/><stop offset="100%" stop-color="#2196f3"/></linearGradient></defs>
+  <rect width="320" height="180" fill="url(#g)"/>
+  <text x="160" y="95" fill="white" font-size="24" font-weight="700" text-anchor="middle" font-family="system-ui">Россия 24</text>
+</svg>

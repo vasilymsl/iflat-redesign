@@ -1,0 +1,217 @@
+import type { ChannelData } from "@/components/sections/ChannelCard";
+import type { ContentItem } from "@/components/sections/ContentShelf";
+
+/**
+ * Бесплатные ТВ-каналы — реальные данные с 24h.tv CDN.
+ * Стримы загружаются динамически через API /api/tv/stream/[id].
+ * Thumbnail — cover.color_bg с API (картинки текущих передач).
+ */
+export const freeChannels: ChannelData[] = [
+  {
+    id: "perviy",
+    name: "Первый канал",
+    logo: "https://cdn.media.24h.tv/img/ch/b1/26/b126935323f77f591433f57967052e2d.png",
+    currentProgram: "Вечерние новости",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/57/70/5770e89903dc38b2671a108c7e13944e.png",
+    progress: 45,
+  },
+  {
+    id: "russia1",
+    name: "Россия 1",
+    logo: "https://cdn.media.24h.tv/img/ch/a6/c1/a6c16c072f4503cb593199b06cf3d8fd.png",
+    currentProgram: "Песни от всей души...",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/0c/73/0c736313010f6b96b2b9f287a37d50b9.png",
+    progress: 72,
+  },
+  {
+    id: "match",
+    name: "МАТЧ!",
+    logo: "https://cdn.media.24h.tv/img/ch/2d/19/2d19887ed0311f847613fa4769ee8f94.png",
+    currentProgram: "Громко",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/e4/b7/e4b7bbdca2a185ba9ed49074aeb67fdc.png",
+    progress: 30,
+  },
+  {
+    id: "ntv",
+    name: "НТВ",
+    logo: "https://cdn.media.24h.tv/img/ch/ac/e9/ace9f80c577713abd6d1048f083e6752.png",
+    currentProgram: "Своя игра",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/7c/3c/7c3ca5dcdc996373d642f1d0d6b3448f.png",
+    progress: 55,
+  },
+  {
+    id: "pyatiy",
+    name: "5 канал",
+    logo: "https://cdn.media.24h.tv/img/ch/97/fc/97fc1a6c78dcfbf2d09f5b85721f36b7.png",
+    currentProgram: "След",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/0b/09/0b0942fa1c1d176eb7790cac40c07c90.png",
+    progress: 40,
+  },
+  {
+    id: "russia24",
+    name: "Россия 24",
+    logo: "https://cdn.media.24h.tv/img/ch/c0/50/c050da211c5f43a7543faaeb27c914c5.png",
+    currentProgram: "По семейным...",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/40/b9/40b946a1ebf607cd1891ce685bbbab4b.png",
+    progress: 58,
+  },
+  {
+    id: "otr",
+    name: "ОТР",
+    logo: "https://cdn.media.24h.tv/img/ch/bd/47/bd47a8fb31b7be5e622833b295b8c0e1.png",
+    currentProgram: "34-й скорый",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/4b/1b/4b1b1c9be38213d8ba3965e74d3dea21.png",
+    progress: 15,
+  },
+  {
+    id: "tvc",
+    name: "ТВ Центр",
+    logo: "https://cdn.media.24h.tv/img/ch/aa/04/aa0486a08976a4c4db7480a06b0c06f8.png",
+    currentProgram: "Загадка Пифагора...",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/6f/91/6f9113b2130264e0d3bf545b46c22047.png",
+    progress: 88,
+  },
+  {
+    id: "karusel",
+    name: "Карусель",
+    logo: "https://cdn.media.24h.tv/img/ch/b0/13/b013740e4bde5ea4eaeaa9d3d06bec0e.png",
+    currentProgram: "Смешарики",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/88/46/8846208cf0e65f5b8de593acd184692d.png",
+    progress: 25,
+  },
+  {
+    id: "spas",
+    name: "Спас",
+    logo: "https://cdn.media.24h.tv/img/ch/f9/8b/f98be758247514c0cb727d64bf207d58.png",
+    currentProgram: "Сейчас в эфире",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/43/09/4309804a916a46dbfdb981bc76b10adf.png",
+    progress: 60,
+  },
+  {
+    id: "ren",
+    name: "РЕН ТВ",
+    logo: "https://cdn.media.24h.tv/img/ch/22/25/22253287b015fb98aa78e5722ed915f4.png",
+    currentProgram: "Военная тайна",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/1c/8a/1c8a7425dc45528bca8c77c4922ec5f3.png",
+    progress: 35,
+  },
+  {
+    id: "sts",
+    name: "СТС",
+    logo: "https://cdn.media.24h.tv/img/ch/1b/77/1b77b1c4eab17110eafc08aab9b57d21.png",
+    currentProgram: "Уральские пельмени",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/91/39/91398795d2c104d4645ad624c95f5c01.png",
+    progress: 50,
+  },
+  {
+    id: "tv3",
+    name: "ТВ3",
+    logo: "https://cdn.media.24h.tv/img/ch/8c/6a/8c6a28c685d65d9c11b9d136592e25c4.png",
+    currentProgram: "Слепая",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/50/23/5023d20664a4e6bed2498c3f335d0efe.png",
+    progress: 70,
+  },
+  {
+    id: "pyatnica",
+    name: "Пятница!",
+    logo: "https://cdn.media.24h.tv/img/ch/33/84/33840aa9a1139f530d2773396b479719.png",
+    currentProgram: "Ревизорро",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/58/c1/58c1b8df4225e135d524c541a3932522.png",
+    progress: 20,
+  },
+  {
+    id: "domashniy",
+    name: "Домашний",
+    logo: "https://cdn.media.24h.tv/img/ch/9e/60/9e601b3d67d9cb6418dbd98177f09100.png",
+    currentProgram: "Знахарка",
+    thumbnail: "https://cdn.media.24h.tv/img/ch/3a/c0/3ac0929771cd6a088be351c73243dc50.png",
+    progress: 80,
+  },
+];
+
+/**
+ * Новинки — реальные постеры фильмов с 24h.tv CDN.
+ * href ведёт на страницу фильма на 24h.tv.
+ */
+export const newReleases: ContentItem[] = [
+  {
+    id: "1",
+    title: "Мы рожаем!",
+    subtitle: "2025, Комедия",
+    poster: "https://cdn.media.24h.tv/img/63/91/639192bfd33cb0548ba0d713ab9b271f.jpeg?w=404&format=webp",
+    rating: 5.6,
+    href: "https://24h.tv/contents/my-rozhaem",
+  },
+  {
+    id: "2",
+    title: "Завтрак в постель",
+    subtitle: "2024, Комедия",
+    poster: "https://cdn.media.24h.tv/img/10/92/1092fc986cfe44c4ec169682da5c14cd.jpg?w=404&format=webp",
+    rating: 7.2,
+    href: "https://24h.tv/contents/zavtrak-v-postel",
+  },
+  {
+    id: "3",
+    title: "Пиноккио",
+    subtitle: "2014, Фэнтези",
+    poster: "https://cdn.media.24h.tv/img/d3/5a/d35aaabae5a95650f1740da515f69365.jpeg?w=404&format=webp",
+    rating: 6.8,
+    href: "https://24h.tv/contents/pinokkio-2024",
+  },
+  {
+    id: "4",
+    title: "Няня Оксана",
+    subtitle: "2025, Комедия",
+    poster: "https://cdn.media.24h.tv/img/b4/b8/b4b859e565f3e2e7affb7c93741e4647.jpg?w=404&format=webp",
+    rating: 6.2,
+    href: "https://24h.tv/contents/njanja-oksana",
+  },
+  {
+    id: "5",
+    title: "Дочь",
+    subtitle: "2024, Драма",
+    poster: "https://cdn.media.24h.tv/img/63/0b/630b46d419f0959513965a1be7d87397.jpeg?w=404&format=webp",
+    rating: 8.1,
+    href: "https://24h.tv/contents/doch-2024",
+  },
+  {
+    id: "6",
+    title: "Гениальная афера",
+    subtitle: "2024, Боевик",
+    poster: "https://cdn.media.24h.tv/img/b6/8c/b68c7bc32075f7cb835a7c9530c74000.jpeg?w=404&format=webp",
+    rating: 7.0,
+    href: "https://24h.tv/contents/genialnaja-afera",
+  },
+  {
+    id: "7",
+    title: "Присцилла: Элвис и я",
+    subtitle: "2023, Биография",
+    poster: "https://cdn.media.24h.tv/img/b5/52/b55240c49cfb77e6860a062272039f6c.jpg?w=404&format=webp",
+    rating: 6.5,
+    href: "https://24h.tv/contents/priscilla",
+  },
+  {
+    id: "8",
+    title: "Баллистика",
+    subtitle: "2025, Боевик",
+    poster: "https://cdn.media.24h.tv/img/04/90/0490ae2bf5712b465af8c571bc77289b.jpg?w=404&format=webp",
+    rating: 7.8,
+    href: "https://24h.tv/contents/ballistika",
+  },
+  {
+    id: "9",
+    title: "Чёрный бриллиант",
+    subtitle: "2025, Криминал",
+    poster: "https://cdn.media.24h.tv/img/a5/c2/a5c2b277ba1f8ab42135210c88dad94d.jpeg?w=404&format=webp",
+    rating: 7.3,
+    href: "https://24h.tv/contents/chernyj-brilliant",
+  },
+  {
+    id: "10",
+    title: "Беззащитные",
+    subtitle: "2024, Триллер",
+    poster: "https://cdn.media.24h.tv/img/38/a2/38a2c9ff77ba6ea5f6e780f3368f99d5.jpeg?w=404&format=webp",
+    rating: 6.9,
+    href: "https://24h.tv/contents/bezzashchitnye",
+  },
+];

@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# build
+tsconfig.tsbuildinfo
+
+# env
+.env
+.env.*
+
+# os
+.DS_Store
+
+# cache
+.tv-token-cache.json
+
+# archives
+*.zip
+
+# misc
+*.log

@@ -1,0 +1,589 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Brand — iFlat orange identity */
+  --color-brand-primary: #F59500;
+  --color-brand-primary-hover: #E08800;
+  --color-brand-primary-light: #FFF3DC;
+
+  /* Dark surfaces */
+  --color-brand-secondary: #0F1A2E;
+  --color-brand-dark: #080E1A;
+
+  /* Accent — sale/promo badges */
+  --color-brand-accent: #F59500;
+
+  /* Neutrals */
+  --color-brand-surface: #F7F8FA;
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-inverted: #FFFFFF;
+
+  /* Semantic */
+  --color-success: #16A34A;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  --breakpoint-xs: 480px;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-weight: 450;
+}
+
+/* Animated hero glows */
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(20px, -15px) rotate(2deg); }
+  66% { transform: translate(-10px, 10px) rotate(-1deg); }
+}
+@keyframes float-slow-reverse {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(-15px, 20px) rotate(-2deg); }
+  66% { transform: translate(10px, -10px) rotate(1deg); }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+
+@media (min-width: 1024px) {
+  .container { padding-left: 2rem; padding-right: 2rem; }
+}
+
+/* Hide scrollbar for tabs */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Responsive carousel slides */
+@media (min-width: 640px) {
+  .carousel-slide {
+    flex: 0 0 calc((100% - var(--gap) * (var(--slides-sm) - 1)) / var(--slides-sm)) !important;
+  }
+}
+@media (min-width: 768px) {
+  .carousel-slide {
+    flex: 0 0 calc((100% - var(--gap) * (var(--slides-md) - 1)) / var(--slides-md)) !important;
+  }
+}
+@media (min-width: 1024px) {
+  .carousel-slide {
+    flex: 0 0 calc((100% - var(--gap) * (var(--slides-lg) - 1)) / var(--slides-lg)) !important;
+  }
+}
+
+/* =============================================
+   TV Shelves — Netflix/24TV style carousels
+   ============================================= */
+
+/* Shelf wrapper */
+.tv-shelf {
+  margin-bottom: 1rem;
+}
+
+/* Shelf header */
+.tv-shelf__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0 3.5rem;
+}
+
+@media (max-width: 767px) {
+  .tv-shelf__header { padding: 0 1rem; }
+}
+
+.tv-shelf__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.tv-shelf__all {
+  font-size: 0.875rem;
+  color: var(--color-brand-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.tv-shelf__all:hover {
+  color: var(--color-brand-primary-hover);
+}
+
+/* Slider container */
+.tv-shelf__slider {
+  position: relative;
+  isolation: isolate; /* stacking context: z-index детей не конфликтуют с header z-50 */
+}
+
+/* Scroll container — padding through inner spacers to avoid overflow clipping */
+.tv-shelf__scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: visible; /* разрешает карточкам расти вертикально при hover (HOVER-04) */
+  /* scroll-snap-type убран на десктопе — JS scroll работает через .scrollBy(), snap дёргает при hover */
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding: 24px 16px 2rem;
+  margin: -14px calc(3.5rem - 16px) 0;
+}
+.tv-shelf__scroll::-webkit-scrollbar { display: none; }
+
+@media (max-width: 767px) {
+  .tv-shelf__scroll {
+    scroll-snap-type: x mandatory; /* мобиль: snap полезен (hover не применяется) */
+    overflow-y: auto; /* мобиль: overflow-y auto OK (hover нет) */
+    gap: 8px;
+    padding: 8px 0 1.5rem;
+    margin: 0 1rem;
+  }
+}
+
+/* Navigation arrows */
+.tv-shelf__arrow {
+  position: absolute;
+  top: 10px;
+  bottom: 2rem;
+  width: 3.5rem;
+  z-index: 10;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  opacity: 0;
+  transition: opacity 0.3s, background 0.3s;
+  background: transparent;
+}
+
+.tv-shelf__arrow--visible {
+  opacity: 0.7;
+}
+
+.tv-shelf__arrow--prev {
+  left: 0;
+  border-radius: 0 8px 8px 0;
+  background: linear-gradient(to left, transparent, rgba(255, 255, 255, 0.9));
+}
+.tv-shelf__arrow--next {
+  right: 0;
+  border-radius: 8px 0 0 8px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.9));
+}
+
+.tv-shelf__slider:hover .tv-shelf__arrow--visible {
+  opacity: 1;
+}
+.tv-shelf__arrow:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+.tv-shelf__arrow--hidden {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .tv-shelf__arrow { display: none; }
+}
+
+/* =============================================
+   Channel Card
+   ============================================= */
+
+.channel-card {
+  flex: 0 0 calc((100% - 10px * 5) / 6);
+  min-width: calc((100% - 10px * 5) / 6);
+  /* scroll-snap-align убран на десктопе — snap-type убран на десктопе */
+  position: relative;
+  cursor: pointer;
+  z-index: 1; /* базовый z-index: нужен для работы z-index:20 при hover */
+}
+
+@media (max-width: 1279px) {
+  .channel-card {
+    flex: 0 0 calc((100% - 10px * 4) / 5);
+    min-width: calc((100% - 10px * 4) / 5);
+  }
+}
+@media (max-width: 1023px) {
+  .channel-card {
+    flex: 0 0 calc((100% - 10px * 3) / 4);
+    min-width: calc((100% - 10px * 3) / 4);
+  }
+}
+@media (max-width: 767px) {
+  .channel-card {
+    flex: 0 0 calc((100% - 8px * 1.5) / 2.5);
+    min-width: calc((100% - 8px * 1.5) / 2.5);
+    scroll-snap-align: start; /* мобиль: snap-align полезен */
+  }
+}
+
+.channel-card-inner {
+  border-radius: 8px;
+  position: relative;
+  /* overflow: hidden убрано — обрезало бы расширение (HOVER-04) */
+  width: 100%;
+  transition: box-shadow 0.25s ease-out, transform 0.25s ease-out;
+  transition-delay: 0.2s; /* 200ms hover intent delay (HOVER-02) */
+}
+
+@media (hover: hover) and (min-width: 768px) {
+  .channel-card:hover {
+    z-index: 20; /* поднять карточку над соседями при hover */
+  }
+
+  .channel-card:hover .channel-card-inner {
+    transform: scale(1.15) translateY(-6px); /* увеличение по центру без сдвига потока */
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+    transition-delay: 0s; /* анимация начинается сразу — delay уже отработал на default state */
+  }
+}
+
+.channel-card-inner--hovered {
+  /* z-index управляется через .channel-card:hover — оставлен для будущего Phase 3 */
+}
+
+/* Preview 16:9 */
+.channel-card__preview {
+  position: relative;
+  padding-bottom: 56.25%;
+  overflow: hidden;
+  border-radius: 8px 8px 0 0;
+  background-color: #e8eaed;
+}
+.channel-card__preview img,
+.channel-card__preview video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Info panel */
+.channel-card__info {
+  display: flex;
+  align-items: stretch;
+  height: 50px;
+  background: #f3f4f6;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+/* Channel logo */
+.channel-card__logo {
+  min-width: 84px;
+  width: 84px;
+  height: 50px;
+  background: #e8eaed;
+  border-radius: 0 0 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Text info */
+.channel-card__text {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.channel-card__program {
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channel-card__name {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+/* =============================================
+   Content Card (Новинки / Постеры)
+   ============================================= */
+
+.content-card {
+  flex: 0 0 calc((100% - 10px * 5) / 6);
+  min-width: calc((100% - 10px * 5) / 6);
+  scroll-snap-align: start;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.25s ease-out 0.1s;
+}
+
+@media (max-width: 1279px) {
+  .content-card {
+    flex: 0 0 calc((100% - 10px * 4) / 5);
+    min-width: calc((100% - 10px * 4) / 5);
+  }
+}
+@media (max-width: 1023px) {
+  .content-card {
+    flex: 0 0 calc((100% - 10px * 3) / 4);
+    min-width: calc((100% - 10px * 3) / 4);
+  }
+}
+@media (max-width: 767px) {
+  .content-card {
+    flex: 0 0 calc((100% - 8px * 1.5) / 2.5);
+    min-width: calc((100% - 8px * 1.5) / 2.5);
+  }
+}
+
+@media (hover: hover) and (min-width: 768px) {
+  .content-card:hover {
+    transform: scale(1.05);
+    z-index: 5;
+    transition-delay: 0s;
+    transition-timing-function: ease-in;
+  }
+}
+
+/* Poster 2:3 */
+.content-card__poster {
+  position: relative;
+  padding-bottom: 150%;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: #e8eaed;
+}
+.content-card__poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Rating badge */
+.content-card__rating {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0;
+  transition: opacity 0.2s 0.15s;
+}
+.content-card:hover .content-card__rating {
+  opacity: 1;
+}
+
+/* Hover glow overlay */
+.content-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.content-card:hover .content-card__glow {
+  opacity: 1;
+}
+
+/* Title */
+.content-card__info {
+  padding-top: 8px;
+}
+
+.content-card__title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content-card__subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =============================================
+   TV Section (dark background wrapper)
+   ============================================= */
+
+.tv-section {
+  background: var(--color-brand-surface);
+  padding: 1.5rem 0;
+}
+
+/* 24TV Section header */
+.tv-section__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 3.5rem 1rem;
+}
+
+.tv-section__headline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tv-section__title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.tv-section__devices-link {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-brand-primary);
+  transition: color 0.2s;
+}
+.tv-section__devices-link:hover {
+  color: var(--color-brand-primary-hover);
+}
+
+/* Search bar */
+.tv-search {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.tv-search:focus-within {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(245, 149, 0, 0.12);
+}
+
+.tv-search__input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  width: 330px;
+  height: 40px;
+  color: var(--color-text-primary);
+}
+.tv-search__input::placeholder {
+  color: #9ca3af;
+}
+
+.tv-search__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: var(--color-brand-primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.tv-search__btn:hover {
+  background: var(--color-brand-primary-hover);
+}
+
+@media (max-width: 767px) {
+  .tv-section__header {
+    padding: 0 1rem 1.25rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .tv-section__title {
+    font-size: 1.125rem;
+  }
+  .tv-search__input {
+    width: 100%;
+  }
+}
+
+/* =============================================
+   "Смотреть все" card at end of shelf
+   ============================================= */
+
+.tv-shelf__show-all-card {
+  cursor: pointer;
+}
+
+/* Reuses .channel-card__preview or .content-card__poster for sizing (padding-bottom),
+   centers icon+text via an inner absolute container */
+.tv-shelf__show-all-preview {
+  border: 2px dashed #d1d5db;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.tv-shelf__show-all-preview:hover {
+  border-color: var(--color-brand-primary);
+  background: #fff;
+}
+
+/* Center the icon and text absolutely over the padding-bottom area */
+.tv-shelf__show-all-preview > svg,
+.tv-shelf__show-all-preview > span {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.tv-shelf__show-all-preview > svg {
+  top: calc(50% - 20px);
+}
+.tv-shelf__show-all-preview > span {
+  top: calc(50% + 14px);
+}
+
+.tv-shelf__show-all-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}

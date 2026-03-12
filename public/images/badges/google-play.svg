@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="130" height="40" viewBox="0 0 130 40">
+  <rect width="130" height="40" rx="6" fill="#000"/>
+  <rect width="130" height="40" rx="6" fill="none" stroke="#fff" stroke-width="0.5" stroke-opacity="0.4"/>
+
+  <!-- Google Play triangle icon -->
+  <g transform="translate(10, 8)">
+    <polygon points="0,0 14,12 0,24" fill="#fff" fill-opacity="0.15"/>
+    <polygon points="0,0 7,6 0,12" fill="#5BC8F5"/>
+    <polygon points="0,12 7,6 14,12" fill="#F7521E"/>
+    <polygon points="0,0 14,12 7,6" fill="#F5E021"/>
+    <polygon points="7,6 14,12 0,24" fill="#3CD97F"/>
+  </g>
+
+  <!-- Text -->
+  <text x="32" y="15" fill="#fff" fill-opacity="0.7" font-family="Arial, sans-serif" font-size="8" letter-spacing="0.3">Скачать в</text>
+  <text x="32" y="29" fill="#fff" font-family="Arial, sans-serif" font-size="13" font-weight="bold" letter-spacing="0.2">Google Play</text>
+</svg>
