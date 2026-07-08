@@ -557,6 +557,7 @@ export async function getChannels(): Promise<{
   logo: string;
   currentProgram: string;
   thumbnail: string;
+  slug: string;
 }[]> {
   const dc = initChannelsCache();
 
@@ -613,6 +614,7 @@ function transformChannels(
       logo: ensureHttps(ch.icon),
       currentProgram: program?.title || ch.name,
       thumbnail: program?.img || ensureHttps(ch.cover?.color_bg || ch.cover?.bg || ch.icon),
+      slug: ch.slug ?? "",
     };
   });
 }

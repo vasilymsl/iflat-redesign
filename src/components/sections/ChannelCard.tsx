@@ -12,6 +12,8 @@ export interface ChannelData {
   thumbnail: string;
   /** Progress of current program 0-100 */
   progress?: number;
+  /** Слаг канала на 24h.tv — клик по карточке ведёт на /channels/allchannels/<slug> */
+  slug?: string;
 }
 
 interface ChannelCardProps {
@@ -149,8 +151,23 @@ export function ChannelCard({ channel, className }: ChannelCardProps) {
     };
   }, []);
 
+  const watchUrl = channel.slug
+    ? `https://24h.tv/channels/allchannels/${channel.slug}`
+    : undefined;
+  const Wrapper = watchUrl ? "a" : "div";
+  const wrapperProps = watchUrl
+    ? {
+        href: watchUrl,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        "aria-label": `Смотреть ${channel.name} на 24ТВ`,
+        draggable: false,
+      }
+    : {};
+
   return (
-    <div
+    <Wrapper
+      {...wrapperProps}
       className={cn("channel-card group", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -226,6 +243,6 @@ export function ChannelCard({ channel, className }: ChannelCardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </Wrapper>
   );
 }

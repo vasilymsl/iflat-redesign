@@ -80,7 +80,9 @@ export function ContentShelf({ title, items, showAllHref }: ContentShelfProps) {
         <div ref={scrollRef} className="tv-shelf__scroll">
           {items.map((item) => {
             const Wrapper = item.href ? "a" : "div";
-            const wrapperProps = item.href ? { href: item.href } : {};
+            const wrapperProps = item.href
+              ? { href: item.href, target: "_blank", rel: "noopener noreferrer" }
+              : {};
             return (
               <Wrapper
                 key={item.id}

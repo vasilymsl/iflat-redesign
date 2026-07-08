@@ -9,6 +9,7 @@ import type { ContentItem } from "@/components/sections/ContentShelf";
 export const freeChannels: ChannelData[] = [
   {
     id: "perviy",
+    slug: "pervyj-kanal-3929",
     name: "Первый канал",
     logo: "https://cdn.media.24h.tv/img/ch/b1/26/b126935323f77f591433f57967052e2d.png",
     currentProgram: "Вечерние новости",
@@ -17,6 +18,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "russia1",
+    slug: "rossija-1-5515",
     name: "Россия 1",
     logo: "https://cdn.media.24h.tv/img/ch/a6/c1/a6c16c072f4503cb593199b06cf3d8fd.png",
     currentProgram: "Песни от всей души...",
@@ -25,6 +27,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "match",
+    slug: "match-3948",
     name: "МАТЧ!",
     logo: "https://cdn.media.24h.tv/img/ch/2d/19/2d19887ed0311f847613fa4769ee8f94.png",
     currentProgram: "Громко",
@@ -33,6 +36,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "ntv",
+    slug: "ntv-10004",
     name: "НТВ",
     logo: "https://cdn.media.24h.tv/img/ch/ac/e9/ace9f80c577713abd6d1048f083e6752.png",
     currentProgram: "Своя игра",
@@ -41,6 +45,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "pyatiy",
+    slug: "5-kanal-4833",
     name: "5 канал",
     logo: "https://cdn.media.24h.tv/img/ch/97/fc/97fc1a6c78dcfbf2d09f5b85721f36b7.png",
     currentProgram: "След",
@@ -49,6 +54,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "russia24",
+    slug: "rossija-24-10049",
     name: "Россия 24",
     logo: "https://cdn.media.24h.tv/img/ch/c0/50/c050da211c5f43a7543faaeb27c914c5.png",
     currentProgram: "По семейным...",
@@ -57,6 +63,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "otr",
+    slug: "otr",
     name: "ОТР",
     logo: "https://cdn.media.24h.tv/img/ch/bd/47/bd47a8fb31b7be5e622833b295b8c0e1.png",
     currentProgram: "34-й скорый",
@@ -65,6 +72,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "tvc",
+    slug: "tvts-10003",
     name: "ТВ Центр",
     logo: "https://cdn.media.24h.tv/img/ch/aa/04/aa0486a08976a4c4db7480a06b0c06f8.png",
     currentProgram: "Загадка Пифагора...",
@@ -73,6 +81,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "karusel",
+    slug: "karusel-10040",
     name: "Карусель",
     logo: "https://cdn.media.24h.tv/img/ch/b0/13/b013740e4bde5ea4eaeaa9d3d06bec0e.png",
     currentProgram: "Смешарики",
@@ -81,6 +90,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "spas",
+    slug: "spas-10060",
     name: "Спас",
     logo: "https://cdn.media.24h.tv/img/ch/f9/8b/f98be758247514c0cb727d64bf207d58.png",
     currentProgram: "Сейчас в эфире",
@@ -89,6 +99,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "ren",
+    slug: "ren-tv-10007",
     name: "РЕН ТВ",
     logo: "https://cdn.media.24h.tv/img/ch/22/25/22253287b015fb98aa78e5722ed915f4.png",
     currentProgram: "Военная тайна",
@@ -97,6 +108,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "sts",
+    slug: "sts-4835",
     name: "СТС",
     logo: "https://cdn.media.24h.tv/img/ch/1b/77/1b77b1c4eab17110eafc08aab9b57d21.png",
     currentProgram: "Уральские пельмени",
@@ -105,6 +117,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "tv3",
+    slug: "tv3-3947",
     name: "ТВ3",
     logo: "https://cdn.media.24h.tv/img/ch/8c/6a/8c6a28c685d65d9c11b9d136592e25c4.png",
     currentProgram: "Слепая",
@@ -113,6 +126,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "pyatnica",
+    slug: "pjatnitsa-3570",
     name: "Пятница!",
     logo: "https://cdn.media.24h.tv/img/ch/33/84/33840aa9a1139f530d2773396b479719.png",
     currentProgram: "Ревизорро",
@@ -121,6 +135,7 @@ export const freeChannels: ChannelData[] = [
   },
   {
     id: "domashniy",
+    slug: "domashnij-10115",
     name: "Домашний",
     logo: "https://cdn.media.24h.tv/img/ch/9e/60/9e601b3d67d9cb6418dbd98177f09100.png",
     currentProgram: "Знахарка",
