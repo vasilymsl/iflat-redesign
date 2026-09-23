@@ -68,26 +68,35 @@ export function TvChannelShelf({ title, channels, showAllHref }: TvChannelShelfP
         </button>
 
         {/* Scroll container */}
-        <div ref={scrollRef} className="tv-shelf__scroll">
+        <div
+          ref={scrollRef}
+          className={cn(
+            "tv-shelf__scroll",
+            canScrollPrev && "tv-shelf__scroll--fade-left",
+            canScrollNext && "tv-shelf__scroll--fade-right"
+          )}
+        >
           {channels.map((channel) => (
             <ChannelCard key={channel.id} channel={channel} />
           ))}
 
-          {/* "Смотреть все" card */}
+          {/* «Смотреть все» — отдельная CTA-карточка на всю высоту ряда */}
           {showAllHref && (
             <a
               href={showAllHref}
               target="_blank"
               rel="noopener noreferrer"
               className="channel-card tv-shelf__show-all-card"
+              aria-label="Смотреть все каналы на 24h.tv"
             >
-              <div className="channel-card-inner">
-                <div className="channel-card__preview tv-shelf__show-all-preview">
-                  <ArrowRight className="w-8 h-8 text-brand-primary" />
+              <span className="tv-shelf__show-all-box tv-shelf__show-all-box--channel">
+                <span className="tv-shelf__show-all-content">
+                  <span className="tv-shelf__show-all-icon" aria-hidden="true">
+                    <ArrowRight className="w-5 h-5" />
+                  </span>
                   <span className="tv-shelf__show-all-text">Смотреть все</span>
-                </div>
-                <div className="channel-card__info" />
-              </div>
+                </span>
+              </span>
             </a>
           )}
         </div>

@@ -549,41 +549,110 @@ html {
 }
 
 /* =============================================
-   "Смотреть все" card at end of shelf
+   24ТВ-шлейфы: карточка «Смотреть все» и края ленты (фикс семьи, 2026-09-23)
+   Было: «Смотреть все» собрана из превью канала + пустой плашки (белый
+   пустой блок снизу, пунктир только сверху), масштабировалась на hover
+   и обрезалась краем ленты; задержка анимации стояла на выходе
+   (карточки «залипали» увеличенными); маска краёв всегда подрезала
+   последнюю карточку. Стало: отдельная CTA-карточка на всю высоту ряда,
+   без масштаба, с фокусом с клавиатуры; маска только там, где есть что
+   прокрутить. Цвета — из переменных бренда сайта.
    ============================================= */
 
 .tv-shelf__show-all-card {
+  --sa-accent: var(--brand-primary, var(--color-brand-primary, #333333));
+  --sa-bg: var(--clay, var(--color-brand-surface, #ffffff));
+  display: block;
   cursor: pointer;
+  text-decoration: none;
+  outline: none;
 }
 
-/* Reuses .channel-card__preview or .content-card__poster for sizing (padding-bottom),
-   centers icon+text via an inner absolute container */
-.tv-shelf__show-all-preview {
-  border: 2px dashed #d1d5db;
-  transition: border-color 0.2s, background 0.2s;
+@media (hover: hover) and (min-width: 768px) {
+  .content-card.tv-shelf__show-all-card:hover { transform: none; }
 }
 
-.tv-shelf__show-all-preview:hover {
-  border-color: var(--color-brand-primary);
-  background: #fff;
+.tv-shelf__show-all-box {
+  display: block;
+  position: relative;
+  border-radius: 16px;
+  background: var(--sa-bg);
+  border: 2px dashed rgba(0, 0, 0, 0.18);
+  border-color: color-mix(in srgb, var(--sa-accent) 38%, transparent);
+  box-shadow: 6px 6px 12px var(--dark-shadow-sm, rgba(0, 0, 0, 0.06)), -6px -6px 12px var(--light-shadow, rgba(255, 255, 255, 0.9));
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
+/* минус 4px — рамка 2px сверху и снизу, высота совпадает с соседними карточками */
+.tv-shelf__show-all-box--channel { padding-bottom: calc(56.25% + 50px - 4px); }
+.tv-shelf__show-all-box--poster { padding-bottom: calc(150% - 4px); }
 
-/* Center the icon and text absolutely over the padding-bottom area */
-.tv-shelf__show-all-preview > svg,
-.tv-shelf__show-all-preview > span {
+.tv-shelf__show-all-content {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  text-align: center;
 }
-.tv-shelf__show-all-preview > svg {
-  top: calc(50% - 20px);
-}
-.tv-shelf__show-all-preview > span {
-  top: calc(50% + 14px);
+
+.tv-shelf__show-all-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--sa-accent);
+  transition: transform 0.2s ease-out;
 }
 
 .tv-shelf__show-all-text {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-primary);
+  line-height: 1.25;
+  color: var(--sa-accent);
+  white-space: normal;
+}
+
+@media (hover: hover) {
+  .tv-shelf__show-all-card:hover .tv-shelf__show-all-box {
+    border-style: solid;
+    border-color: var(--sa-accent);
+  }
+  .tv-shelf__show-all-card:hover .tv-shelf__show-all-icon {
+    transform: translateX(4px);
+  }
+}
+
+.tv-shelf__show-all-card:focus-visible .tv-shelf__show-all-box {
+  border-style: solid;
+  border-color: var(--sa-accent);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sa-accent) 30%, transparent);
+}
+
+/* Анимация наведения: уход — сразу, вход — с небольшой задержкой */
+.channel-card-inner { transition-delay: 0s; }
+.content-card { transition-delay: 0s; }
+@media (hover: hover) and (min-width: 768px) {
+  .channel-card:hover .channel-card-inner { transition-delay: 0.12s; }
+  .content-card:hover { transition-delay: 0.1s; }
+  /* крайние карточки увеличиваются внутрь ленты, а не за её край */
+  .tv-shelf__scroll > .channel-card:first-child .channel-card-inner,
+  .tv-shelf__scroll > .content-card:first-child { transform-origin: left center; }
+  .tv-shelf__scroll > .channel-card:last-child .channel-card-inner,
+  .tv-shelf__scroll > .content-card:last-child { transform-origin: right center; }
+}
+
+/* Мобайл: боковой отступ 6px — крайние карточки и тени не срезаются краем ленты */
+@media (max-width: 767px) {
+  .tv-shelf__scroll {
+    padding: 8px 6px 1.5rem;
+    scroll-padding-inline: 6px;
+    margin: 0 calc(1rem - 6px);
+  }
 }

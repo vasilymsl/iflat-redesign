@@ -77,7 +77,14 @@ export function ContentShelf({ title, items, showAllHref }: ContentShelfProps) {
         </button>
 
         {/* Scroll container */}
-        <div ref={scrollRef} className="tv-shelf__scroll">
+        <div
+          ref={scrollRef}
+          className={cn(
+            "tv-shelf__scroll",
+            canScrollPrev && "tv-shelf__scroll--fade-left",
+            canScrollNext && "tv-shelf__scroll--fade-right"
+          )}
+        >
           {items.map((item) => {
             const Wrapper = item.href ? "a" : "div";
             const wrapperProps = item.href
@@ -125,18 +132,23 @@ export function ContentShelf({ title, items, showAllHref }: ContentShelfProps) {
             );
           })}
 
-          {/* "Смотреть все" card */}
+          {/* «Смотреть все» — отдельная CTA-карточка на высоту постера */}
           {showAllHref && (
             <a
               href={showAllHref}
               target="_blank"
               rel="noopener noreferrer"
               className="content-card tv-shelf__show-all-card"
+              aria-label="Смотреть все новинки на 24h.tv"
             >
-              <div className="content-card__poster tv-shelf__show-all-preview">
-                <ArrowRight className="w-8 h-8 text-brand-primary" />
-                <span className="tv-shelf__show-all-text">Смотреть все</span>
-              </div>
+              <span className="tv-shelf__show-all-box tv-shelf__show-all-box--poster">
+                <span className="tv-shelf__show-all-content">
+                  <span className="tv-shelf__show-all-icon" aria-hidden="true">
+                    <ArrowRight className="w-5 h-5" />
+                  </span>
+                  <span className="tv-shelf__show-all-text">Смотреть все</span>
+                </span>
+              </span>
             </a>
           )}
         </div>
